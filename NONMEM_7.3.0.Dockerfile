@@ -1,5 +1,29 @@
 # Dockerfile to build NONMEM 7.3.0
 
+# Build with the following command:
+# docker build \
+#  --build-arg NONMEMZIPPASS=[your password] \
+#  -t humanpredictions/nonmem:7.3.0 \
+#  -t humanpredictions/nonmem:latest \
+#  -f NONMEM_7.3.0.Dockerfile .
+
+# Installation can be sped up for multiple installations (like
+# nmqual, NONMEM, and PsN) by pre-downloading required zip
+# files and then serving them from a local directory:
+#
+# wget https://nonmem.iconplc.com/nonmem730/NONMEM7.3.0.zip
+# wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.3.3.zip
+# python -m SimpleHTTPServer
+#
+# Then in a separate terminal, give your local server for the
+# NONMEMURL and NMQUALURL build arguments:
+# docker build \
+#  --build-arg NONMEMZIPPASS=[your password] \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.3.0.zip \
+#  -t humanpredictions/nonmem:7.3.0 \
+#  -t humanpredictions/nonmem:latest \
+#  -f NONMEM_7.3.0.Dockerfile .
+
 # Set the base image to a long-term Ubuntu release
 FROM ubuntu:16.04
 

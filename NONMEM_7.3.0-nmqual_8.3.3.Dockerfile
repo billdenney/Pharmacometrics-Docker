@@ -1,4 +1,4 @@
-# Dockerfile to build NONMEM 7.3.0
+# Dockerfile to build NMQual 8.3.3 with NONMEM 7.3.0
 
 # Build with the following command:
 # docker build \
