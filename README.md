@@ -34,3 +34,11 @@ of the NMQual docker image.  You must build the NMQual image first to
 build the PsN image.
 
 http://psn.sourceforge.net/
+
+## PMx-Rocker
+
+A dockerfile to build R 3.3.0 with added packages from a .csv file.
+This is based on the Rocker image.
+
+https://github.com/rocker-org/rocker
+https://cran.r-project.org/
