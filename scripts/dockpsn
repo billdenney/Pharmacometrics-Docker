@@ -1,0 +1,5 @@
+#!/bin/bash
+RUNDIR=$(pwd)
+DOCKERIMAGE=humanpredictions/psn
+docker run --rm --user=$(id -u):$(id -g) -v "$RUNDIR":/tmp -w /tmp $DOCKERIMAGE $@
+
