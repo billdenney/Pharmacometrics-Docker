@@ -26,3 +26,5 @@ extrafont,CRAN,,,,font_import(prompt=FALSE);loadfonts()
 lme4,CRAN,,,,
 directlabels,CRAN,,,,
 GGally,CRAN,,For ggcorr,,
+xpose4,CRAN,,,,
+knitcitations,CRAN,,,,
