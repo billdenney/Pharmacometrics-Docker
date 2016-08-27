@@ -2,7 +2,7 @@
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.6.0-2 \
+#  -t humanpredictions/psn:4.6.0-3 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM_4.6.0.Dockerfile .
 
@@ -30,6 +30,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
        libmoose-perl \
        libmoosex-params-validate-perl \
        libtest-exception-perl \
+       libyaml-tiny-perl \
     && rm -rf /var/lib/apt/lists/ \
               /var/cache/apt/archives/ \
               /usr/share/doc/ \
