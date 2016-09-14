@@ -17,6 +17,14 @@ download time).
 
 http://www.iconplc.com/innovation/solutions/nonmem/
 
+### Installation
+
+* Copy your nonmem license file (named `nonmen.lic` to the same
+  directory as the Dockerfile.
+* Have your NONMEM zip file password handy
+* See the instructions in the top of the Dockerfile for the command
+  to run.
+
 ## NMQual 8.3.3
 
 A dockerfile to build a gfortran-run NONMEM 7.3.0 with NMQual 8.3.3.
@@ -27,6 +35,14 @@ run (and minimize download time).
 
 https://bitbucket.org/metrumrg/nmqual/
 
+### Installation
+
+* Copy your nonmem license file (named `nonmen.lic` to the same
+  directory as the Dockerfile.
+* Have your NONMEM zip file password handy
+* See the instructions in the top of the Dockerfile for the command
+  to run.
+
 ## Perl-speaks-NONMEM
 
 A dockerfile to build a Perl-speaks-NONMEM (PsN) 4.6.0 installation on top
@@ -35,6 +51,12 @@ build the PsN image.
 
 http://psn.sourceforge.net/
 
+### Installation
+
+* Install the NMQual image above (this image starts from that image)
+* See the instructions in the top of the Dockerfile for the command
+  to run.
+
 ## PMx-Rocker
 
 A dockerfile to build R 3.3.0 with added packages from a .csv file.
@@ -42,3 +64,9 @@ This is based on the Rocker image.
 
 https://github.com/rocker-org/rocker
 https://cran.r-project.org/
+
+### Installation
+
+* Optionally modify the list of packages to install (see [PMxrocker/packages.csv](PMx_rocker/packages.csv))
+* See the instructions in the top of the Dockerfile for the command
+  to run.
