@@ -2,7 +2,7 @@
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.6.0-3 \
+#  -t humanpredictions/psn:4.6.0-4 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM_4.6.0.Dockerfile .
 
@@ -77,5 +77,10 @@ nm73gf\n\
 
 ENV PATH /opt/PsN/4.6.0/bin:$PATH
 
+# Update the NONMEM license file if it is available in the /license
+# directory (/license can be mounted from the host system with the
+# -v option to docker)
+COPY scripts/CopyFileAndRun.sh /opt/CopyFileAndRun.sh
+ENTRYPOINT ["/opt/CopyFileAndRun.sh", "/license/nonmem.lic", "/opt/nm730/license/nonmem.lic"]
 ## Run execute to run a NONMEM model
 CMD ["/opt/PsN/4.6.0/bin/execute"]

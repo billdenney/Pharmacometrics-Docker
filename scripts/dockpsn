@@ -1,5 +1,5 @@
 #!/bin/bash
 RUNDIR=$(pwd)
+LICENSEDIR=/opt/NONMEM/license
 DOCKERIMAGE=humanpredictions/psn
-docker run --rm --user=$(id -u):$(id -g) -v "$RUNDIR":/tmp -w /tmp $DOCKERIMAGE $@
-
+docker run --rm --user=$(id -u):$(id -g) -v "$LICENSEDIR":/license -v "$RUNDIR":/tmp -w /tmp $DOCKERIMAGE $@

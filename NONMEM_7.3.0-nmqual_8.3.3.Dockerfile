@@ -3,7 +3,7 @@
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nmqual:7.3.0_8.3.3-gfortran-2 \
+#  -t humanpredictions/nmqual:7.3.0_8.3.3-gfortran-3 \
 #  -t humanpredictions/nmqual:latest \
 #  -f NONMEM_7.3.0-nmqual_8.3.3.Dockerfile .
 
@@ -95,9 +95,9 @@ COPY nonmem.lic /mnt
 
 RUN cd /mnt \
     && echo "Get and uncompress the files for installation" \
-    && wget --no-show-progress --no-check-certificate ${NONMEMURL} \
+    && wget -nv --no-check-certificate ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM7.3.0.zip \
-    && wget --no-show-progress --no-check-certificate ${NMQUALURL} \
+    && wget -nv --no-check-certificate ${NMQUALURL} \
     && unzip nmqual-8.3.3.zip \
     && echo "Update the NMQual configuration for this Docker installation" \
     && sed 's /usr/local/mpich3gf/lib/libmpich.a /usr/lib/mpich/lib/libmpich.a ;s/mkdir/mkdir -p/;s/cp mpicha/ln -sf mpicha/' \
@@ -165,5 +165,10 @@ RUN cd /mnt \
             util/finish_Linux_g95 \
             util/finish_SunOS*)
 
+# Update the NONMEM license file if it is available in the /license
+# directory (/license can be mounted from the host system with the
+# -v option to docker)
+COPY scripts/CopyFileAndRun.sh /opt/CopyFileAndRun.sh
+ENTRYPOINT ["/opt/CopyFileAndRun.sh", "/license/nonmem.lic", "/opt/nm730/license/nonmem.lic"]
 ## Run the NMQual version of nmfe73
 CMD ["/opt/NONMEM/nm73gf/util/nmfe73"]

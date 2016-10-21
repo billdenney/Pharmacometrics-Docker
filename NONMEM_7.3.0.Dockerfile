@@ -3,7 +3,7 @@
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nonmem:7.3.0-gfortran-2 \
+#  -t humanpredictions/nonmem:7.3.0-gfortran-3 \
 #  -t humanpredictions/nonmem:latest \
 #  -f NONMEM_7.3.0.Dockerfile .
 
@@ -54,7 +54,7 @@ COPY nonmem.lic /opt/nm730/license/nonmem.lic
 ## Install NONMEM and then clean out unnecessary files to shrink
 ## the image
 RUN cd /tmp \
-    && wget --no-check-certificate ${NONMEMURL} \
+    && wget -nv --no-check-certificate ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM7.3.0.zip \
     && cd /tmp/nm730CD \
     && bash SETUP73 /tmp/nm730CD \
@@ -127,4 +127,9 @@ RUN cd /tmp \
             util/finish_Linux_g95 \
             util/finish_SunOS*)
 
+# Update the NONMEM license file if it is available in the /license
+# directory (/license can be mounted from the host system with the
+# -v option to docker)
+COPY scripts/CopyFileAndRun.sh /opt/CopyFileAndRun.sh
+ENTRYPOINT ["/opt/CopyFileAndRun.sh", "/license/nonmem.lic", "/opt/nm730/license/nonmem.lic"]
 CMD ["/opt/nm730/run/nmfe73"]
