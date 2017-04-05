@@ -3,7 +3,7 @@
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nmqual:7.3.0_8.3.3-gfortran-3 \
+#  -t humanpredictions/nmqual:7.3.0_8.3.3-gfortran-4 \
 #  -t humanpredictions/nmqual:latest \
 #  -f NONMEM_7.3.0-nmqual_8.3.3.Dockerfile .
 
@@ -169,6 +169,6 @@ RUN cd /mnt \
 # directory (/license can be mounted from the host system with the
 # -v option to docker)
 COPY scripts/CopyFileAndRun.sh /opt/CopyFileAndRun.sh
-ENTRYPOINT ["/opt/CopyFileAndRun.sh", "/license/nonmem.lic", "/opt/nm730/license/nonmem.lic"]
+ENTRYPOINT ["/opt/CopyFileAndRun.sh", "/license/nonmem.lic", "/opt/NONMEM/nm73gf/license/nonmem.lic"]
 ## Run the NMQual version of nmfe73
 CMD ["/opt/NONMEM/nm73gf/util/nmfe73"]
