@@ -1,5 +1,17 @@
 #!/bin/bash
 RUNDIR=$(pwd)
-LICENSEDIR=/opt/NONMEM/license
+NONMEMLICENSEDIR=/opt/NONMEM/license
+INTELLICENSEDIR=/opt/intel/licenses
 DOCKERIMAGE=humanpredictions/psn
-docker run --rm --user=$(id -u):$(id -g) -v "$LICENSEDIR":/license -v "$RUNDIR":/tmp -w /tmp $DOCKERIMAGE $@
+
+INTELLICENSEARG=""
+if [ -d "${INTELLICENSEDIR}" ]; then \
+    INTELLICENSEARG=-v "$INTELLICENSEDIR":/opt/intel/licenses
+fi
+
+docker run --rm --user=$(id -u):$(id -g) \
+       -v "$NONMEMLICENSEDIR":/opt/NONMEM/nm_current/license \
+       $INTELLICENSEARG \
+       -v "$RUNDIR":/tmp \
+       -w /tmp \
+       $DOCKERIMAGE $@

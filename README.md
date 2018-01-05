@@ -7,9 +7,9 @@ Each of these files is intended to help improve reproducible research
 by enabling the use of Docker images to keep all requirements for
 execution in a single container.
 
-## NONMEM 7.3.0
+## NONMEM 7.4.1
 
-A dockerfile to build a gfortran-run NONMEM 7.3.0 installation.  It
+A dockerfile to build a gfortran-run NONMEM 7.4.1 installation.  It
 will require a NONMEM license file (in the same directory nonmem.lic).
 If you will be installing both NONMEM and NMQual, see the instructions
 in the comments of the file for how to speed up the run (and minimize
@@ -30,7 +30,7 @@ http://www.iconplc.com/innovation/solutions/nonmem/
 It is recommended to run NONMEM via Perl-speaks-NONMEM (below).  To
 run NONMEM directly, you can run the following command:
 
-    docker run --rm --user=$(id -u):$(id -g) -v $(pwd):/data -w /data humanpredictions/nonmem /opt/nm730/run/nmfe73 CONTROL.mod CONTROL.res
+    docker run --rm --user=$(id -u):$(id -g) -v $(pwd):/data -w /data humanpredictions/nonmem /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
 
 ### Updating Your License
 
@@ -38,11 +38,11 @@ To update your license file without requiring a rebuild of the Docker
 image, you can mount a directory containing the license file in the
 /license directory of your image (note the first -v argument):
 
-    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/license -v $(pwd):/data -w /data humanpredictions/nonmem /opt/nm730/run/nmfe73 CONTROL.mod CONTROL.res
+    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/nonmem /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
 
-## NMQual 8.3.3
+## NMQual 8.4.0
 
-A dockerfile to build a gfortran-run NONMEM 7.3.0 with NMQual 8.3.3.
+A dockerfile to build a gfortran-run NONMEM 7.4.1 with NMQual 8.4.0.
 It will require a NONMEM license file (in the same directory
 nonmem.lic).  If you will be installing both NONMEM and NMQual, see
 the instructions in the comments of the file for how to speed up the
@@ -55,7 +55,7 @@ https://bitbucket.org/metrumrg/nmqual/
 It is recommended to run NONMEM via Perl-speaks-NONMEM (below).  To
 run NONMEM directly, you can run the following command:
 
-    docker run --rm --user=$(id -u):$(id -g) -v $(pwd):/data -w /data humanpredictions/nmqual /opt/nm730/run/nmfe73 CONTROL.mod CONTROL.res
+    docker run --rm --user=$(id -u):$(id -g) -v $(pwd):/data -w /data humanpredictions/nmqual /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
 
 ### Updating Your License
 
@@ -63,11 +63,11 @@ To update your license file without requiring a rebuild of the Docker
 image, you can mount a directory containing the license file in the
 /license directory of your image (note the first -v argument):
 
-    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/license -v $(pwd):/data -w /data humanpredictions/nmqual /opt/nm730/run/nmfe73 CONTROL.mod CONTROL.res
+    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/nmqual /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
 
 ### Installation
 
-* Copy your nonmem license file (named `nonmen.lic` to the same
+* Copy your nonmem license file (named `nonmen.lic`) to the same
   directory as the Dockerfile.
 * Have your NONMEM zip file password handy
 * See the instructions in the top of the Dockerfile for the command
@@ -75,11 +75,11 @@ image, you can mount a directory containing the license file in the
 
 ## Perl-speaks-NONMEM
 
-A dockerfile to build a Perl-speaks-NONMEM (PsN) 4.6.0 installation on top
+A dockerfile to build a Perl-speaks-NONMEM (PsN) 4.7.0 installation on top
 of the NMQual docker image.  You must build the NMQual image first to
 build the PsN image.
 
-http://psn.sourceforge.net/
+https://github.com/UUPharmacometrics/PsN/
 
 ### Installation
 
@@ -114,7 +114,7 @@ To update your license file without requiring a rebuild of the Docker
 image, you can mount a directory containing the license file in the
 /license directory of your image (note the first -v argument):
 
-    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/license -v $(pwd):/data -w /data humanpredictions/psn execute CONTROL.mod
+    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/psn execute CONTROL.mod
 
 That is automatically done with the `dockpsn` command.
 
