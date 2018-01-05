@@ -40,7 +40,7 @@ RUN apt-get update \
 ## minimum requirements by Intel Support:
 ## https://software.intel.com/en-us/comment/1876639
 
-COPY ifort.cfg /tmp/ifort_base.cfg
+COPY ifort_2016.3.cfg /tmp/ifort_base.cfg
 
 RUN cd /tmp \
     && wget http://registrationcenter-download.intel.com/akdlm/irc_nas/9065/parallel_studio_xe_2016_update3_online.sh \
