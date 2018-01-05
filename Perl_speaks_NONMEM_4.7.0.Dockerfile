@@ -99,7 +99,7 @@ RUN cd /mnt \
         done \
     && cd /opt/PsN/${PSN_VERSION}/test/PsN_test_${PSN_VERSION_UNDERSCORE} \
     #&& prove -r unit \
-    && prove -r system \
+    #&& prove -r system \
     && rm -r /opt/PsN/${PSN_VERSION}/test \
     && rm -rf mnt/*
 
