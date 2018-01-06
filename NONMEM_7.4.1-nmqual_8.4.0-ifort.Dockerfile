@@ -97,9 +97,9 @@ ENV NMLICENSEPATH=/mnt/nonmem.lic
 ## Give the correct location for mpich library.
 ## Ensure that parent directories are created with mkdir.
 ##
-## Note sed's allows for any delimiter to be used (not just
-## the most common '/').  I am using a space here because there
-## are no spaces in the filenames.
+## Note sed's allows for any delimiter to be used (not just the most
+## common '/').  I am using a pipe here because there are no spaces
+## and slashes in the replacements.
 
 ## autolog qualify line comments:
 ## Some compiler warnings are expected in the qualify step:
@@ -113,10 +113,10 @@ RUN cd /mnt \
     && unzip nmqual-${NMQUAL_VERSION}.zip \
     && echo "Update the NMQual configuration for this Docker installation" \
     && cat nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}.xml | \
-       sed 's /usr/local/mpich3/lib/libmpich.a '${MPIPATH}' ; \
-            s /etc/chef/cookbooks/ifort-nonmem/files/default/nonmem.lic '${NMLICENSEPATH}' ; \
-            s/mkdir/mkdir -p/; \
-            s/cp mpicha/ln -sf mpicha/' > \
+       sed 's|/usr/local/mpich3/lib/libmpich.a|'${MPIPATH}'|; \
+            s|/etc/chef/cookbooks/ifort-nonmem/files/default/nonmem.lic|'${NMLICENSEPATH}'|; \
+            s|mkdir|mkdir -p|; \
+            s|cp mpicha target/mpi/mpi_lini|ln -sf mpicha target/mpi/mpi_lini/libmpich.a|' > \
          ${NMQUAL_XML_DOCKER} \
     && echo "Install NONMEM and NMQual" \
     && cd nmqual-${NMQUAL_VERSION} \
@@ -145,7 +145,7 @@ RUN cd /mnt \
             SETUP* \
             unzip.SunOS \
             unzip.exe \
-            mpi/mpi_lini \
+            mpi/mpi_ling \
             mpi/mpi_wing \
             mpi/mpi_wini \
             run/*.bat \
@@ -193,6 +193,8 @@ RUN cd / \
     && ln -s /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} /opt/NONMEM/nm_current \
     && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
              /opt/NONMEM/nm_current/util/nmfe
+
+ENV PATH /opt/intel/compilers_and_libraries/linux/bin/intel64:/opt/intel/compilers_and_libraries/linux/mpi/bin64:$PATH
 
 ## Run the NMQual version of nmfe
 CMD ["/opt/NONMEM/nm_current/util/nmfe"]

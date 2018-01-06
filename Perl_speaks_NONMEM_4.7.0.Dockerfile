@@ -103,7 +103,9 @@ RUN cd /mnt \
     && rm -r /opt/PsN/${PSN_VERSION}/test \
     && rm -rf mnt/*
 
+RUN ln -s /opt/PsN/${PSN_VERSION} /opt/PsN/current
+
 ENV PATH /opt/PsN/${PSN_VERSION}/bin:$PATH
 
 ## Run execute to run a NONMEM model
-CMD ["/opt/PsN/${PSN_VERSION}/bin/execute"]
+CMD ["/opt/PsN/current/bin/execute"]
