@@ -6,12 +6,12 @@ DOCKERIMAGE=humanpredictions/psn
 
 INTELLICENSEARG=""
 if [ -d "${INTELLICENSEDIR}" ]; then \
-    INTELLICENSEARG=-v "$INTELLICENSEDIR":/opt/intel/licenses
+    INTELLICENSEARG='-v '"${INTELLICENSEDIR}":/opt/intel/licenses
 fi
 
 docker run --rm --user=$(id -u):$(id -g) \
-       -v "$NONMEMLICENSEDIR":/opt/NONMEM/nm_current/license \
+       -v "${NONMEMLICENSEDIR}":/opt/NONMEM/nm_current/license \
        $INTELLICENSEARG \
-       -v "$RUNDIR":/tmp \
+       -v "${RUNDIR}":/tmp \
        -w /tmp \
        $DOCKERIMAGE $@
