@@ -2,7 +2,7 @@
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.7.0-1 \
+#  -t humanpredictions/psn:4.7.0-2 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM_4.7.0.Dockerfile .
 
@@ -45,12 +45,16 @@ ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSI
 ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
 ARG NMTHREADS=4
 
+ENV PSNPATCHURL=https://github.com/UUPharmacometrics/PsN/commit/55687a947eeee78a4c83949116022625764a4f08.patch
+
 ## The echo command provides inputs to setup.pl
 
 RUN cd /mnt \
     && wget --no-show-progress --no-check-certificate -O psn.tar.gz ${PSNURL} \
     && tar zxf psn.tar.gz \
     && cd PsN-Source \
+    && wget -O psn.patch ${PSNPATCHURL} \
+    && patch -p1 < psn.patch \
     && expect -c "set timeout { 2 exit }; \
        spawn perl setup.pl; \
        expect -ex \"PsN Utilities installation directory \[/usr/local/bin\]:\"; \
