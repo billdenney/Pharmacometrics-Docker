@@ -1,11 +1,11 @@
-# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.1 and MPI
+# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.2 and MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nmqual:7.4.1_8.4.0-ifort-1 \
+#  -t humanpredictions/nmqual:7.4.2_8.4.0-ifort-2 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.1-nmqual_8.4.0.Dockerfile .
+#  -f NONMEM_7.4.2-nmqual_8.4.0.Dockerfile .
 
 # NONMEM and Intel FORTRAN licenses must exist in the current
 # directory named nonmem.lic and ifort.lic, respectively.
@@ -14,7 +14,7 @@
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget https://nonmem.iconplc.com/nonmem730/NONMEM7.4.1.zip
+# wget https://nonmem.iconplc.com/nonmem742/NONMEM7.4.2.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -22,11 +22,11 @@
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.1.zip \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.2.zip \
 #  --build-arg NMQUALURL=http://example.com/nmqual-8.4.0.zip \
-#  -t humanpredictions/nmqual:7.4.1_8.4.0-ifort-1 \
+#  -t humanpredictions/nmqual:7.4.2_8.4.0-ifort-2 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.1-nmqual_8.4.0.Dockerfile .
+#  -f NONMEM_7.4.2-nmqual_8.4.0.Dockerfile .
 #
 # Other build-arg values are available to set the level of NMQual
 # testing (NMQUALTESTLEVEL).  See below for details.
@@ -37,7 +37,10 @@ FROM humanpredictions/ifort:2018.1
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
 
-# Install wget and unzip (then clean up the image as much as possible)
+# Install:
+# wget,
+# and unzip
+# (then clean up the image as much as possible)
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
        wget \
@@ -64,7 +67,7 @@ RUN apt-get update \
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=1
+ARG NONMEM_PATCH_VERSION=2
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip
@@ -75,8 +78,10 @@ ARG NMQUAL_MINOR_VERSION=4
 ARG NMQUAL_PATCH_VERSION=0
 ENV NMQUAL_VERSION_NO_DOTS=${NMQUAL_MAJOR_VERSION}${NMQUAL_MINOR_VERSION}${NMQUAL_PATCH_VERSION}
 ENV NMQUAL_VERSION=${NMQUAL_MAJOR_VERSION}.${NMQUAL_MINOR_VERSION}.${NMQUAL_PATCH_VERSION}
-ENV NMQUAL_XML_DOCKER=/mnt/nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}_docker.xml
 
+ENV GFEXTENSION=
+ENV NMQUAL_XML_ORIGINAL=/mnt/nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}.xml
+ENV NMQUAL_XML_DOCKER=/mnt/nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}_docker.xml
 ENV MPIPATH=/opt/intel/impi/2018.1.163/intel64/lib/libmpi.a
 
 ARG NMQUALURL=https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-${NMQUAL_VERSION}.zip
@@ -112,8 +117,8 @@ RUN cd /mnt \
     && wget -nv --no-check-certificate ${NMQUALURL} \
     && unzip nmqual-${NMQUAL_VERSION}.zip \
     && echo "Update the NMQual configuration for this Docker installation" \
-    && cat nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}.xml | \
-       sed 's|/usr/local/mpich3/lib/libmpich.a|'${MPIPATH}'|; \
+    && cat ${NMQUAL_XML_ORIGINAL} | \
+       sed 's|/usr/local/mpich3${GFEXTENSION}/lib/libmpich.a|'${MPIPATH}'|; \
             s|/etc/chef/cookbooks/ifort-nonmem/files/default/nonmem.lic|'${NMLICENSEPATH}'|; \
             s|mkdir|mkdir -p|; \
             s|cp mpicha target/mpi/mpi_lini|ln -sf mpicha target/mpi/mpi_lini/libmpich.a|' > \
@@ -122,16 +127,16 @@ RUN cd /mnt \
     && cd nmqual-${NMQUAL_VERSION} \
     && perl autolog.pl ${NMQUAL_XML_DOCKER} install \
     && perl autolog.pl ${NMQUAL_XML_DOCKER} $NMQUALTESTLEVEL \
-    && echo $NMQUALTESTLEVEL > /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}/nmqual/testlevel \
+    && echo $NMQUALTESTLEVEL > /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}/nmqual/testlevel \
     && echo "Update the default number of nodes for parallel NONMEM in the mpilinux_XX.pnm file" \
     && for NMNODES in 2 4 8 12 16 20 24 28 32 64 128; do \
          sed 's/\[nodes\]=8/\[nodes\]='$NMNODES'/' \
-           /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}/run/mpilinux8.pnm > \
-           /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}/run/mpilinux_$NMNODES.pnm ; \
+           /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}/run/mpilinux8.pnm > \
+           /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}/run/mpilinux_$NMNODES.pnm ; \
        done \
     && cd / \
     && rm -r /mnt/* \
-    && (cd /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}/ && \
+    && (cd /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}/ && \
         rm -rf \
             examples/ \
             guides/ \
@@ -187,10 +192,9 @@ RUN cd /mnt \
             util/finish_Linux_g95 \
             util/finish_SunOS*)
 
-
 RUN cd / \
     && mkdir -p /opt/NONMEM \
-    && ln -s /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} /opt/NONMEM/nm_current \
+    && ln -s /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION} /opt/NONMEM/nm_current \
     && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
              /opt/NONMEM/nm_current/util/nmfe
 

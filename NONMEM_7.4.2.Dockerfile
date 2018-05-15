@@ -30,8 +30,12 @@ FROM ubuntu:16.04
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
 
-# Install gfortran, wget, and unzip (then clean up the image
-# as much as possible)
+# Install:
+# gfortran,
+# MPI,
+# wget,
+# and unzip
+# (then clean up the image as much as possible)
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
        gfortran \
@@ -41,9 +45,9 @@ RUN apt-get update \
        unzip \
     && rm -rf /var/lib/apt/lists/ \
               /var/cache/apt/archives/ \
-	      /usr/share/doc/ \
-	      /usr/share/man/ \
-	      /usr/share/locale/
+              /usr/share/doc/ \
+              /usr/share/man/ \
+              /usr/share/locale/
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=4
@@ -136,10 +140,10 @@ RUN cd /tmp \
 RUN cd / \
     && mkdir -p /opt/NONMEM \
     && ln -s /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} /opt/NONMEM/nm_current \
-    && ln -s /opt/NONMEM/nm_current/run/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
-             /opt/NONMEM/nm_current/run/nmfe
+    && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
+             /opt/NONMEM/nm_current/util/nmfe
 
 # Update the NONMEM license file if it is available in the /license
 # directory (/opt/NONMEM/nm_current/license should be mounted from the
 # host system with the -v option to docker)
-CMD ["/opt/NONMEM/nm_current/run/nmfe"]
+CMD ["/opt/NONMEM/nm_current/util/nmfe"]
