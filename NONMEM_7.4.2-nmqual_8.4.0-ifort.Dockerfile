@@ -119,6 +119,7 @@ RUN cd /mnt \
     && echo "Update the NMQual configuration for this Docker installation" \
     && cat ${NMQUAL_XML_ORIGINAL} | \
        sed 's|/usr/local/mpich3${GFEXTENSION}/lib/libmpich.a|'${MPIPATH}'|; \
+            s|741|'${NONMEM_VERSION_NO_DOTS}'|; \
             s|/etc/chef/cookbooks/ifort-nonmem/files/default/nonmem.lic|'${NMLICENSEPATH}'|; \
             s|mkdir|mkdir -p|; \
             s|cp mpicha target/mpi/mpi_lini|ln -sf mpicha target/mpi/mpi_lini/libmpich.a|' > \
