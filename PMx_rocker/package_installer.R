@@ -71,6 +71,9 @@ for (n in names(repos.list)) {
   }
 }
 
+library(installr)
+install.rtools()
+
 library(devtools)
 mask.github <- desired.packages$repos %in% "GitHub"
 for (n in desired.packages$package.name[mask.github]) {
