@@ -7,9 +7,9 @@ Each of these files is intended to help improve reproducible research
 by enabling the use of Docker images to keep all requirements for
 execution in a single container.
 
-## NONMEM 7.4.1
+## NONMEM 7.4.3
 
-A dockerfile to build a gfortran-run NONMEM 7.4.1 installation.  It
+A dockerfile to build a gfortran-run NONMEM 7.4.3 installation.  It
 will require a NONMEM license file (in the same directory nonmem.lic).
 If you will be installing both NONMEM and NMQual, see the instructions
 in the comments of the file for how to speed up the run (and minimize
@@ -42,7 +42,7 @@ image, you can mount a directory containing the license file in the
 
 ## NMQual 8.4.0
 
-A dockerfile to build a gfortran-run NONMEM 7.4.1 with NMQual 8.4.0.
+A dockerfile to build a gfortran-run NONMEM 7.4.3 with NMQual 8.4.0.
 It will require a NONMEM license file (in the same directory
 nonmem.lic).  If you will be installing both NONMEM and NMQual, see
 the instructions in the comments of the file for how to speed up the
@@ -75,7 +75,7 @@ image, you can mount a directory containing the license file in the
 
 ## Perl-speaks-NONMEM
 
-A dockerfile to build a Perl-speaks-NONMEM (PsN) 4.7.0 installation on top
+A dockerfile to build a Perl-speaks-NONMEM (PsN) 4.9.0 installation on top
 of the NMQual docker image.  You must build the NMQual image first to
 build the PsN image.
 

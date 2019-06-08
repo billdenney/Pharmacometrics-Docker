@@ -1,10 +1,10 @@
-# Dockerfile to build Perl-speaks-NONMEM version 4.8.0
+# Dockerfile to build Perl-speaks-NONMEM version 4.9.0
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.8.0-1 \
+#  -t humanpredictions/psn:4.9.0-1 \
 #  -t humanpredictions/psn:latest \
-#  -f Perl_speaks_NONMEM_4.8.0.Dockerfile .
+#  -f Perl_speaks_NONMEM_4.9.0.Dockerfile .
 
 # Start from the NMQual installation
 FROM humanpredictions/nmqual:latest
@@ -18,6 +18,7 @@ MAINTAINER William Denney <wdenney@humanpredictions.com>
 # libmath-random-perl.
 RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
        /etc/apt/sources.list.d/multi.list \
+    && ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
        libmath-random-perl \
@@ -38,7 +39,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
 
 ## Install and test PsN using nmqual
 ENV PSN_VERSION_MAJOR=4
-ENV PSN_VERSION_MINOR=8
+ENV PSN_VERSION_MINOR=9
 ENV PSN_VERSION_PATCH=0
 ENV PSN_VERSION=${PSN_VERSION_MAJOR}.${PSN_VERSION_MINOR}.${PSN_VERSION_PATCH}
 ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSION_PATCH}
@@ -65,6 +66,8 @@ RUN cd /mnt \
        send \"y\r\"; \
        expect -ex \"Continue installing PsN (installing is possible even if modules are missing)\[y/n\]?\"; \
        send \"y\r\"; \
+       expect -ex \"PsNR will be installed in your default R library\"; \
+       send \"n\r\"; \
        expect -ex \"Would you like to copy the PsN documentation to a file system location of your choice?\"; \
        send \"n\r\"; \
        expect -ex \"Would you like to install the PsN test library?\"; \
@@ -73,8 +76,6 @@ RUN cd /mnt \
        send \"/opt/PsN/${PSN_VERSION}/test\r\"; \
        expect -ex \"Would you like help to create a configuration file?\"; \
        send \"y\r\"; \
-       expect -ex \"Enter the *complete* path of the NM-installation directory:\"; \
-       send \"/opt/NONMEM/nm_current/\r\"; \
        expect -ex \"Would you like to add another one\"; \
        send \"n\r\"; \
        expect -ex \"or press ENTER to use the name\"; \
@@ -99,9 +100,9 @@ RUN cd /mnt \
         done \
     && cd /opt/PsN/${PSN_VERSION}/test/PsN_test_${PSN_VERSION_UNDERSCORE} \
     # https://github.com/UUPharmacometrics/PsN/issues/65
-    #&& prove -r unit \
-    # https://github.com/UUPharmacometrics/PsN/issues/66
-    #&& prove -r system \
+    # && prove -r unit \
+    # https://github.com/UUPharmacometrics/PsN/issues/66 and https://github.com/UUPharmacometrics/PsN/issues/136
+    # && prove -r system \
     && rm -r /opt/PsN/${PSN_VERSION}/test \
     && rm -rf mnt/*
 

@@ -10,7 +10,7 @@
 # docker run --rm -v "$(pwd)":/tmp -w /tmp \
 #  humanpredictions/psn R CMD BATCH myrfile.R
 
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 MAINTAINER William Denney
 

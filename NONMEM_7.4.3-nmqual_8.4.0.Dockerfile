@@ -1,20 +1,17 @@
-# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.2 and MPI
+# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.3 and MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nmqual:7.4.2_8.4.0-ifort-2 \
+#  -t humanpredictions/nmqual:7.4.3_8.4.0-gfortran-1 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.2-nmqual_8.4.0.Dockerfile .
-
-# NONMEM and Intel FORTRAN licenses must exist in the current
-# directory named nonmem.lic and ifort.lic, respectively.
+#  -f NONMEM_7.4.3-nmqual_8.4.0.Dockerfile .
 
 # Installation can be sped up for multiple installations (like
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget https://nonmem.iconplc.com/nonmem742/NONMEM7.4.2.zip
+# wget https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -22,27 +19,32 @@
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.2.zip \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.3.zip \
 #  --build-arg NMQUALURL=http://example.com/nmqual-8.4.0.zip \
-#  -t humanpredictions/nmqual:7.4.2_8.4.0-ifort-2 \
+#  -t humanpredictions/nmqual:7.4.3_8.4.0-gfortran-1 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.2-nmqual_8.4.0.Dockerfile .
+#  -f NONMEM_7.4.3-nmqual_8.4.0.Dockerfile .
 #
 # Other build-arg values are available to set the level of NMQual
 # testing (NMQUALTESTLEVEL).  See below for details.
 
-# Set the base image to the current version of Intel FORTRAN
-FROM humanpredictions/ifort:2018.1
+# Set the base image to a long-term Ubuntu release
+FROM ubuntu:18.04
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
 
 # Install:
+# gfortran,
+# MPI,
 # wget,
 # and unzip
 # (then clean up the image as much as possible)
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
+       gfortran \
+       libmpich-dev \
+       mpich \
        wget \
        unzip \
     && rm -rf /var/lib/apt/lists/ \
@@ -67,7 +69,7 @@ RUN apt-get update \
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=2
+ARG NONMEM_PATCH_VERSION=3
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip
@@ -79,10 +81,10 @@ ARG NMQUAL_PATCH_VERSION=0
 ENV NMQUAL_VERSION_NO_DOTS=${NMQUAL_MAJOR_VERSION}${NMQUAL_MINOR_VERSION}${NMQUAL_PATCH_VERSION}
 ENV NMQUAL_VERSION=${NMQUAL_MAJOR_VERSION}.${NMQUAL_MINOR_VERSION}.${NMQUAL_PATCH_VERSION}
 
-ENV GFEXTENSION=
+ENV GFEXTENSION=gf
 ENV NMQUAL_XML_ORIGINAL=/mnt/nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION}.xml
 ENV NMQUAL_XML_DOCKER=/mnt/nmqual-${NMQUAL_VERSION}/nix/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}_docker.xml
-ENV MPIPATH=/opt/intel/impi/2018.1.163/intel64/lib/libmpi.a
+ENV MPIPATH=/usr/lib/mpich/lib/libmpich.a
 
 ARG NMQUALURL=https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-${NMQUAL_VERSION}.zip
 # This is the level of testing to run: "qualify" for full testing,
@@ -92,7 +94,6 @@ ARG NMQUALTESTLEVEL=qualify
 
 ## Copy the current NONMEM license file into the image
 COPY nonmem.lic /mnt
-COPY ifort.lic /opt/intel/licenses
 ENV NMLICENSEPATH=/mnt/nonmem.lic
 
 ## Install and test NONMEM using nmqual
@@ -122,7 +123,7 @@ RUN cd /mnt \
             s|741|'${NONMEM_VERSION_NO_DOTS}'|; \
             s|/etc/chef/cookbooks/ifort-nonmem/files/default/nonmem.lic|'${NMLICENSEPATH}'|; \
             s|mkdir|mkdir -p|; \
-            s|cp mpicha target/mpi/mpi_lini|ln -sf mpicha target/mpi/mpi_lini/libmpich.a|' > \
+            s|cp mpicha|ln -sf mpicha|' > \
          ${NMQUAL_XML_DOCKER} \
     && echo "Install NONMEM and NMQual" \
     && cd nmqual-${NMQUAL_VERSION} \
@@ -151,7 +152,7 @@ RUN cd /mnt \
             SETUP* \
             unzip.SunOS \
             unzip.exe \
-            mpi/mpi_ling \
+            mpi/mpi_lini \
             mpi/mpi_wing \
             mpi/mpi_wini \
             run/*.bat \
@@ -198,8 +199,6 @@ RUN cd / \
     && ln -s /opt/NONMEM/nm${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${GFEXTENSION} /opt/NONMEM/nm_current \
     && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
              /opt/NONMEM/nm_current/util/nmfe
-
-ENV PATH /opt/intel/compilers_and_libraries/linux/bin/intel64:/opt/intel/compilers_and_libraries/linux/mpi/bin64:$PATH
 
 ## Run the NMQual version of nmfe
 CMD ["/opt/NONMEM/nm_current/util/nmfe"]
