@@ -14,7 +14,7 @@
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -112,7 +112,7 @@ ENV NMLICENSEPATH=/mnt/nonmem.lic
 
 RUN cd /mnt \
     && echo "Get and uncompress the files for installation" \
-    && wget -nv --no-check-certificate ${NONMEMURL} \
+    && wget -nv --no-check-certificate --auth-no-challenge ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM${NONMEM_VERSION}.zip \
     && wget -nv --no-check-certificate ${NMQUALURL} \
     && unzip nmqual-${NMQUAL_VERSION}.zip \

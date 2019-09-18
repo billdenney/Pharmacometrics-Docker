@@ -11,7 +11,7 @@
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -64,7 +64,7 @@ COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
 ## Install NONMEM and then clean out unnecessary files to shrink
 ## the image
 RUN cd /tmp \
-    && wget -nv --no-check-certificate ${NONMEMURL} \
+    && wget -nv --no-check-certificate --auth-no-challenge ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM${NONMEM_VERSION}.zip \
     && cd /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
     && bash SETUP${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
