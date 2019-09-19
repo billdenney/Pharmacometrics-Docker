@@ -24,6 +24,10 @@ http://www.iconplc.com/innovation/solutions/nonmem/
 * Have your NONMEM zip file password handy
 * See the instructions in the top of the Dockerfile for the command
   to run.
+* For NONMEM, automatic download from Icon may be unreliable
+  (https://github.com/billdenney/Pharmacometrics-Docker/issues/2).
+  Manual download and serving the file from a local webserver is
+  recommended.  (See the top of the Dockerfile for instructions.)
 
 ### Running
 
