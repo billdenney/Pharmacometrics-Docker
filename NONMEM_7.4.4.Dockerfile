@@ -1,17 +1,17 @@
-# Dockerfile to build NONMEM 7.4.3 with MPI
+# Dockerfile to build NONMEM 7.4.4 with MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nonmem:7.4.3-gfortran-1 \
+#  -t humanpredictions/nonmem:7.4.4-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
-#  -f NONMEM_7.4.3.Dockerfile .
+#  -f NONMEM_7.4.4.Dockerfile .
 
 # Installation can be sped up for multiple installations (like
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem744/NONMEM7.4.4.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -19,10 +19,10 @@
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.3.zip \
-#  -t humanpredictions/nonmem:7.4.3-gfortran-1 \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.4.zip \
+#  -t humanpredictions/nonmem:7.4.4-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
-#  -f NONMEM_7.4.3.Dockerfile .
+#  -f NONMEM_7.4.4.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
 FROM ubuntu:18.04
@@ -51,7 +51,7 @@ RUN apt-get update \
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=3
+ARG NONMEM_PATCH_VERSION=4
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip
