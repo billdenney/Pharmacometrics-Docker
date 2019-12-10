@@ -1,17 +1,17 @@
-# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.3 and MPI
+# Dockerfile to build NMQual 8.4.0 with NONMEM 7.4.4 and MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nmqual:7.4.3_8.4.0-gfortran-1 \
+#  -t humanpredictions/nmqual:7.4.4_8.4.0-gfortran-1 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.3-nmqual_8.4.0.Dockerfile .
+#  -f NONMEM_7.4.4-nmqual_8.4.0.Dockerfile .
 
 # Installation can be sped up for multiple installations (like
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem743/NONMEM7.4.3.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem744/NONMEM7.4.4.zip
 # wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
 # python -m SimpleHTTPServer
 #
@@ -19,11 +19,11 @@
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.3.zip \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.4.zip \
 #  --build-arg NMQUALURL=http://example.com/nmqual-8.4.0.zip \
-#  -t humanpredictions/nmqual:7.4.3_8.4.0-gfortran-1 \
+#  -t humanpredictions/nmqual:7.4.4_8.4.0-gfortran-1 \
 #  -t humanpredictions/nmqual:latest \
-#  -f NONMEM_7.4.3-nmqual_8.4.0.Dockerfile .
+#  -f NONMEM_7.4.4-nmqual_8.4.0.Dockerfile .
 #
 # Other build-arg values are available to set the level of NMQual
 # testing (NMQUALTESTLEVEL).  See below for details.
@@ -69,7 +69,7 @@ RUN apt-get update \
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=3
+ARG NONMEM_PATCH_VERSION=4
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip

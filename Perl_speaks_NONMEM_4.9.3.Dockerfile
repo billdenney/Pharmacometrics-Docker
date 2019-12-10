@@ -1,10 +1,10 @@
-# Dockerfile to build Perl-speaks-NONMEM version 4.9.0
+# Dockerfile to build Perl-speaks-NONMEM version 4.9.3
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.9.0-1 \
+#  -t humanpredictions/psn:4.9.3-1 \
 #  -t humanpredictions/psn:latest \
-#  -f Perl_speaks_NONMEM_4.9.0.Dockerfile .
+#  -f Perl_speaks_NONMEM_4.9.3.Dockerfile .
 
 # Start from the NMQual installation
 FROM humanpredictions/nmqual:latest
@@ -40,7 +40,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
 ## Install and test PsN using nmqual
 ENV PSN_VERSION_MAJOR=4
 ENV PSN_VERSION_MINOR=9
-ENV PSN_VERSION_PATCH=0
+ENV PSN_VERSION_PATCH=3
 ENV PSN_VERSION=${PSN_VERSION_MAJOR}.${PSN_VERSION_MINOR}.${PSN_VERSION_PATCH}
 ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSION_PATCH}
 ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
@@ -52,7 +52,7 @@ RUN cd /mnt \
     && wget --no-show-progress --no-check-certificate -O psn.tar.gz ${PSNURL} \
     && tar zxf psn.tar.gz \
     && cd PsN-Source \
-    && expect -c "set timeout { 2 exit }; \
+    && expect -c "set timeout { 5 exit }; \
        spawn perl setup.pl; \
        expect -ex \"PsN Utilities installation directory \[/usr/local/bin\]:\"; \
        send \"/opt/PsN/${PSN_VERSION}/bin\r\"; \
@@ -60,19 +60,17 @@ RUN cd /mnt \
        send \"y\r\"; \
        expect -ex \"Path to perl binary used to run Utilities \[/usr/bin/perl\]:\"; \
        send \"/usr/bin/perl\r\"; \
-       expect -ex \"PsN Core and Toolkit installation directory \[/usr/local/share/perl\"; \
+       expect -ex \"PsN Core and Toolkit installation directory \[\"; \
        send \"/opt/PsN/${PSN_VERSION}\r\"; \
        expect -ex \"Would you like this script to check Perl modules \[y/n\]?\"; \
        send \"y\r\"; \
        expect -ex \"Continue installing PsN (installing is possible even if modules are missing)\[y/n\]?\"; \
        send \"y\r\"; \
-       expect -ex \"PsNR will be installed in your default R library\"; \
-       send \"n\r\"; \
-       expect -ex \"Would you like to copy the PsN documentation to a file system location of your choice?\"; \
+       expect -ex \"Would you like to install the PsNR R package that is needed for the rplots functionality and the qa tool\"; \
        send \"n\r\"; \
        expect -ex \"Would you like to install the PsN test library?\"; \
        send \"y\r\"; \
-       expect -ex \"PsN test library installation directory \[/usr/local/share/perl/\"; \
+       expect -ex \"PsN test library installation directory \[\"; \
        send \"/opt/PsN/${PSN_VERSION}/test\r\"; \
        expect -ex \"Would you like help to create a configuration file?\"; \
        send \"y\r\"; \
@@ -99,9 +97,8 @@ RUN cd /mnt \
                     /opt/PsN/${PSN_VERSION}/PsN_${PSN_VERSION_UNDERSCORE}/psn.conf ; \
         done \
     && cd /opt/PsN/${PSN_VERSION}/test/PsN_test_${PSN_VERSION_UNDERSCORE} \
-    # https://github.com/UUPharmacometrics/PsN/issues/65
-    # && prove -r unit \
-    # https://github.com/UUPharmacometrics/PsN/issues/66 and https://github.com/UUPharmacometrics/PsN/issues/136
+    && prove -r unit \
+    # https://github.com/UUPharmacometrics/PsN/issues/66
     # && prove -r system \
     && rm -r /opt/PsN/${PSN_VERSION}/test \
     && rm -rf mnt/*
