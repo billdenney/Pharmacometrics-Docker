@@ -25,7 +25,7 @@
 #  -f NONMEM_7.4.4.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
@@ -80,7 +80,13 @@ RUN cd /tmp \
                     nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}r.zip \
     && rm -r /tmp/* \
     && rm -f /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
-    && ln -s /usr/lib/mpich/lib/libmpich.a /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
+    && ln -s /usr/lib/x86_64-linux-gnu/libmpich.a /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
+    && echo "Update the default number of nodes for parallel NONMEM in the mpilinux_XX.pnm file" \
+    && for NMNODES in 2 4 8 12 16 20 24 28 32 64 128; do \
+         sed 's/\[nodes\]=8/\[nodes\]='$NMNODES'/' \
+           /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux8.pnm > \
+           /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux_$NMNODES.pnm ; \
+       done \
     && (cd /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} && \
         rm -rf \
             examples/ \

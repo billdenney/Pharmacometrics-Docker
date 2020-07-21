@@ -1,24 +1,24 @@
 #!/bin/bash
 RUNDIR=$(pwd)
 NONMEMLICENSEDIR=/opt/NONMEM/license
-INTELLICENSEDIR=/opt/intel/licenses
+#INTELLICENSEDIR=/opt/intel/licenses
 DOCKERIMAGE=humanpredictions/psn
 # The MAC address here is the last one assigned by Docker
-MACADDRESS=02:42:ac:11:ff:ff
+#MACADDRESS=02:42:ac:11:ff:ff
 
-INTELLICENSEARG=""
-if [ -d "${INTELLICENSEDIR}" ]; then \
-    INTELLICENSEARG='-v '"${INTELLICENSEDIR}":/opt/intel/licenses
-fi
-MACADDRESSARG=""
-if [ ! -z "$MACADDRESS" ]; then \
-    MACADDRESSARG='--mac-address '${MACADDRESS}
-fi
+#INTELLICENSEARG=""
+#if [ -d "${INTELLICENSEDIR}" ]; then \
+#    INTELLICENSEARG='-v '"${INTELLICENSEDIR}":/opt/intel/licenses
+#fi
+#MACADDRESSARG=""
+#if [ ! -z "$MACADDRESS" ]; then \
+#    MACADDRESSARG='--mac-address '${MACADDRESS}
+#fi
 
 docker run --rm --user=$(id -u):$(id -g) \
        -v "${NONMEMLICENSEDIR}":/opt/NONMEM/nm_current/license \
-       $INTELLICENSEARG \
-       $MACADDRESSARG \
+#       $INTELLICENSEARG \
+#       $MACADDRESSARG \
        -v "${RUNDIR}":/tmp \
        -w /tmp \
        $DOCKERIMAGE $@

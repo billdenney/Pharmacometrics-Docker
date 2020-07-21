@@ -7,7 +7,7 @@
 #  -f Perl_speaks_NONMEM_4.9.3.Dockerfile .
 
 # Start from the NMQual installation
-FROM humanpredictions/nmqual:latest
+FROM humanpredictions/nonmem:latest
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
@@ -37,7 +37,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
               /usr/share/locale/ \
               /etc/apt/sources.list.d/multi.list
 
-## Install and test PsN using nmqual
+## Install and test PsN
 ENV PSN_VERSION_MAJOR=4
 ENV PSN_VERSION_MINOR=9
 ENV PSN_VERSION_PATCH=3
@@ -82,7 +82,7 @@ RUN cd /mnt \
        send \"\r\";" \
     && mv /opt/PsN/${PSN_VERSION}/PsN_${PSN_VERSION_UNDERSCORE}/psn.conf /mnt/psn.conf \
     && cat /mnt/psn.conf | \
-           sed 's/nmfe=1/nmqual=1/;s/threads=5/threads='$NMTHREADS'/' > \
+           sed 's/threads=5/threads='$NMTHREADS'/' > \
            /opt/PsN/${PSN_VERSION}/PsN_${PSN_VERSION_UNDERSCORE}/psn.conf \
     && PSN_NONMEM_VERSION=$(echo $NONMEM_VERSION | sed 's/\.[0-9]$//g') \
     && MPICOUNT=$(echo $(for MPINAME in /opt/NONMEM/nm_current/run/mpilinux_[0-9]*.pnm; do echo $(basename $MPINAME | sed 's/[^0-9]*//g'); done) | sort -n) \
