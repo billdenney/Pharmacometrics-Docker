@@ -110,17 +110,3 @@ image, you can mount a directory containing the license file in the
     docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/psn execute CONTROL.mod
 
 That is automatically done with the `dockpsn` command.
-
-## PMx-Rocker
-
-A dockerfile to build R 3.3.0 with added packages from a .csv file.
-This is based on the Rocker image.
-
-https://github.com/rocker-org/rocker
-https://cran.r-project.org/
-
-### Installation
-
-* Optionally modify the list of packages to install (see [PMxrocker/packages.csv](PMx_rocker/packages.csv))
-* See the instructions in the top of the Dockerfile for the command
-  to run.

@@ -1,5 +1,0 @@
-#!/bin/bash
-RUNDIR=$(pwd)
-DOCKERIMAGE=humanpredictions/pmxrocker
-docker run --rm -it --user=$(id -u):$(id -g) -v "$RUNDIR":/tmp -w /tmp $DOCKERIMAGE R $@
-
