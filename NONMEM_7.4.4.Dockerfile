@@ -25,7 +25,7 @@
 #  -f NONMEM_7.4.4.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
@@ -38,9 +38,12 @@ MAINTAINER William Denney <wdenney@humanpredictions.com>
 # (then clean up the image as much as possible)
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
+       # For gfortran/libmpi/mpich, could consider a specific version to avoid differences when rebuilding, e.g.
+       # gfortran=4:7.4.0-1ubuntu2.3 \ libmpich-dev=3.3~a2-4 \ mpich=3.3~a2-4 \
        gfortran \
        libmpich-dev \
        mpich \
+       libgfortran3 \
        wget \
        unzip \
     && rm -rf /var/lib/apt/lists/ \
@@ -50,8 +53,8 @@ RUN apt-get update \
               /usr/share/locale/
 
 ARG NONMEM_MAJOR_VERSION=7
-ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=4
+ARG NONMEM_MINOR_VERSION=5
+ARG NONMEM_PATCH_VERSION=0
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip
@@ -63,6 +66,10 @@ COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
 
 ## Install NONMEM and then clean out unnecessary files to shrink
 ## the image
+## Had problems with downloading zip file, therefore downloaded it manually and copied it here:
+## COPY NONMEM${NONMEM_VERSION_NO_DOTS}.zip /tmp/NONMEM${NONMEM_VERSION_NO_DOTS}.zip
+## Did not fully check if all files below that are removed were present in NM750
+## Personally deleted just a small subset: rm -rf examples/ guides/ help/ html/ *.pdf *.txt *.zip
 RUN cd /tmp \
     && wget -nv --no-check-certificate --auth-no-challenge ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM${NONMEM_VERSION}.zip \
