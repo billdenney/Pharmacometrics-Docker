@@ -1,28 +1,27 @@
-# Dockerfile to build NONMEM 7.4.4 with MPI
+# Dockerfile to build NONMEM 7.5.0 with MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nonmem:7.4.4-gfortran-1 \
+#  -t humanpredictions/nonmem:7.5.0-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
-#  -f NONMEM_7.4.4.Dockerfile .
+#  -f NONMEM.Dockerfile .
 
 # Installation can be sped up for multiple installations (like
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem744/NONMEM7.4.4.zip
-# wget https://bitbucket.org/metrumrg/nmqual/downloads/nmqual-8.4.0.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem750/NONMEM750.zip
 # python -m SimpleHTTPServer
 #
 # Then in a separate terminal, give your local server for the
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.4.4.zip \
-#  -t humanpredictions/nonmem:7.4.4-gfortran-1 \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.5.0.zip \
+#  -t humanpredictions/nonmem:7.5.0-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
-#  -f NONMEM_7.4.4.Dockerfile .
+#  -f NONMEM.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
 FROM ubuntu:20.04
@@ -50,13 +49,12 @@ RUN apt-get update \
               /usr/share/locale/
 
 ARG NONMEM_MAJOR_VERSION=7
-ARG NONMEM_MINOR_VERSION=4
-ARG NONMEM_PATCH_VERSION=4
+ARG NONMEM_MINOR_VERSION=5
+ARG NONMEM_PATCH_VERSION=0
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
-ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION}.zip
+ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION_NO_DOTS}.zip
 ARG NONMEMZIPPASS
-
 
 ## Copy the current license file into the image
 COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
@@ -64,25 +62,32 @@ COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
 ## Install NONMEM and then clean out unnecessary files to shrink
 ## the image
 RUN cd /tmp \
-    && wget -nv --no-check-certificate --auth-no-challenge ${NONMEMURL} \
+    && wget \
+	 -nv --no-check-certificate --auth-no-challenge \
+         -O /tmp/NONMEM${NONMEM_VERSION}.zip \
+	 ${NONMEMURL} \
     && unzip -P ${NONMEMZIPPASS} NONMEM${NONMEM_VERSION}.zip \
     && cd /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
-    && bash SETUP${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
-       	            /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} \
-                    gfortran \
-                    y \
-                    /usr/bin/ar \
-                    same \
-                    rec \
-                    q \
-                    unzip \
-                    nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}e.zip \
-                    nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}r.zip \
+    && bash \
+         SETUP${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
+         /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
+       	 /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} \
+         gfortran \
+         y \
+         /usr/bin/ar \
+         same \
+         rec \
+         q \
+         unzip \
+         nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}e.zip \
+         nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}r.zip \
     && rm -r /tmp/* \
     && rm -f /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
-    && ln -s /usr/lib/x86_64-linux-gnu/libmpich.a /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
+    && ln -s \
+        /usr/lib/x86_64-linux-gnu/libmpich.a \
+	/opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
     && echo "Update the default number of nodes for parallel NONMEM in the mpilinux_XX.pnm file" \
-    && for NMNODES in 2 4 8 12 16 20 24 28 32 64 128; do \
+    && for NMNODES in 2 4 6 8 10 12 14 16 18 20 22 24 28 32 48 64 128; do \
          sed 's/\[nodes\]=8/\[nodes\]='$NMNODES'/' \
            /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux8.pnm > \
            /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux_$NMNODES.pnm ; \

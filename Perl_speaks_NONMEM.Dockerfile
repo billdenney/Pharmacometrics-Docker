@@ -1,10 +1,10 @@
-# Dockerfile to build Perl-speaks-NONMEM version 4.9.3
+# Dockerfile to build Perl-speaks-NONMEM version 5.0.0
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:4.9.3-1 \
+#  -t humanpredictions/psn:5.0.0-1 \
 #  -t humanpredictions/psn:latest \
-#  -f Perl_speaks_NONMEM_4.9.3.Dockerfile .
+#  -f Perl_speaks_NONMEM.Dockerfile .
 
 # Start from the NMQual installation
 FROM humanpredictions/nonmem:latest
@@ -12,24 +12,30 @@ FROM humanpredictions/nonmem:latest
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
 
-# Install perl libraries required for PsN (then clean up
-# the image as much as possible).  libstorable-perl is automatically
-# installed with perl.  multiverse repository is required for
-# libmath-random-perl.
-RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
-       /etc/apt/sources.list.d/multi.list \
-    && ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
+# First, install perl libraries required for PsN, then install R and
+# required libraries, then install python (then clean up the image as
+# much as possible).
+RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
        libmath-random-perl \
+       libmoose-perl \
+       libmoosex-params-validate-perl \
        libstatistics-distributions-perl \
        libarchive-zip-perl \
        libfile-copy-recursive-perl \
-       libmoose-perl \
-       libmoosex-params-validate-perl \
        libtest-exception-perl \
        libyaml-libyaml-perl \
+       libinline-perl \
        expect \
+       \
+       r-base pandoc \
+       libpq-dev libcairo2-dev libssl-dev libcurl4-openssl-dev \
+       libmariadb-dev libgmp-dev libmpfr-dev libxml2-dev \
+       libudunits2-dev libblas-dev liblapack-dev libmagick++-dev \
+       make \
+       \
+       python3 python3-venv python3-dev \
     && rm -rf /var/lib/apt/lists/ \
               /var/cache/apt/archives/ \
               /usr/share/doc/ \
@@ -38,21 +44,30 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial multiverse" > \
               /etc/apt/sources.list.d/multi.list
 
 ## Install and test PsN
-ENV PSN_VERSION_MAJOR=4
-ENV PSN_VERSION_MINOR=9
-ENV PSN_VERSION_PATCH=3
+ENV PSN_VERSION_MAJOR=5
+ENV PSN_VERSION_MINOR=0
+ENV PSN_VERSION_PATCH=0
 ENV PSN_VERSION=${PSN_VERSION_MAJOR}.${PSN_VERSION_MINOR}.${PSN_VERSION_PATCH}
 ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSION_PATCH}
 ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
 ARG NMTHREADS=4
 
+## For PsN Installation
+ENV R_LIBS_SITE=/opt/PsN/${PSN_VERSION}/PsN_${PSN_VERSION_UNDERSCORE}/Rlib
+ENV R_LIBS_USER=${R_LIBS_SITE}
+
 ## The echo command provides inputs to setup.pl
+## A 120 second timeout is used for python installation, and it may
+## take longer on some systems.
 
 RUN cd /mnt \
     && wget --no-show-progress --no-check-certificate -O psn.tar.gz ${PSNURL} \
     && tar zxf psn.tar.gz \
     && cd PsN-Source \
-    && expect -c "set timeout { 5 exit }; \
+    && mkdir -p ${R_LIBS_SITE} \
+    && Rscript -e "install.packages(c('renv', 'remotes'), lib='${R_LIBS_SITE}', repos='https://cloud.r-project.org')" \
+    && Rscript -e ".libPaths(c('${R_LIBS_SITE}', .libPaths())); options(renv.consent=TRUE); renv::settings\$use.cache(FALSE); renv::restore(library='${R_LIBS_SITE}', lockfile='PsNR/renv.lock')" \
+    && expect -c "set timeout { 120 exit }; \
        spawn perl setup.pl; \
        expect -ex \"PsN Utilities installation directory \[/usr/local/bin\]:\"; \
        send \"/opt/PsN/${PSN_VERSION}/bin\r\"; \
@@ -66,8 +81,12 @@ RUN cd /mnt \
        send \"y\r\"; \
        expect -ex \"Continue installing PsN (installing is possible even if modules are missing)\[y/n\]?\"; \
        send \"y\r\"; \
-       expect -ex \"Would you like to install the PsNR R package that is needed for the rplots functionality and the qa tool\"; \
-       send \"n\r\"; \
+       expect -ex \"Would you like to continue anyway\"; \
+       send \"y\r\"; \
+       expect -ex \"Would you like to install the PsNR R package\"; \
+       send \"y\r\"; \
+       expect -ex \"install the pharmpy python package\"; \
+       send \"y\r\"; \
        expect -ex \"Would you like to install the PsN test library?\"; \
        send \"y\r\"; \
        expect -ex \"PsN test library installation directory \[\"; \
@@ -98,8 +117,7 @@ RUN cd /mnt \
         done \
     && cd /opt/PsN/${PSN_VERSION}/test/PsN_test_${PSN_VERSION_UNDERSCORE} \
     && prove -r unit \
-    # https://github.com/UUPharmacometrics/PsN/issues/66
-    # && prove -r system \
+    && prove -r system \
     && rm -r /opt/PsN/${PSN_VERSION}/test \
     && rm -rf mnt/*
 
