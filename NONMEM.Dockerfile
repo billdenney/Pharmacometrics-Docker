@@ -1,9 +1,9 @@
-# Dockerfile to build NONMEM 7.5.0 with MPI
+# Dockerfile to build NONMEM 7.5.1 with MPI
 
 # Build with the following command:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nonmem:7.5.0-gfortran-1 \
+#  -t humanpredictions/nonmem:7.5.1-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
 #  -f NONMEM.Dockerfile .
 
@@ -11,15 +11,15 @@
 # nmqual, NONMEM, and PsN) by pre-downloading required zip
 # files and then serving them from a local directory:
 #
-# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem750/NONMEM750.zip
+# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem751/NONMEM751.zip
 # python -m SimpleHTTPServer
 #
 # Then in a separate terminal, give your local server for the
 # NONMEMURL and NMQUALURL build arguments:
 # docker build \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.5.0.zip \
-#  -t humanpredictions/nonmem:7.5.0-gfortran-1 \
+#  --build-arg NONMEMURL=http://example.com/NONMEM7.5.1.zip \
+#  -t humanpredictions/nonmem:7.5.1-gfortran-1 \
 #  -t humanpredictions/nonmem:latest \
 #  -f NONMEM.Dockerfile .
 
@@ -50,7 +50,7 @@ RUN apt-get update \
 
 ARG NONMEM_MAJOR_VERSION=7
 ARG NONMEM_MINOR_VERSION=5
-ARG NONMEM_PATCH_VERSION=0
+ARG NONMEM_PATCH_VERSION=1
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
 ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION_NO_DOTS}.zip

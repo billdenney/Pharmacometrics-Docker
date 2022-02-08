@@ -1,8 +1,8 @@
-# Dockerfile to build Perl-speaks-NONMEM version 5.0.0
+# Dockerfile to build Perl-speaks-NONMEM version 5.2.6
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:5.0.0-1 \
+#  -t humanpredictions/psn:5.2.6-1 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM.Dockerfile .
 
@@ -45,11 +45,11 @@ RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
 
 ## Install and test PsN
 ENV PSN_VERSION_MAJOR=5
-ENV PSN_VERSION_MINOR=0
-ENV PSN_VERSION_PATCH=0
+ENV PSN_VERSION_MINOR=2
+ENV PSN_VERSION_PATCH=6
 ENV PSN_VERSION=${PSN_VERSION_MAJOR}.${PSN_VERSION_MINOR}.${PSN_VERSION_PATCH}
 ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSION_PATCH}
-ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
+ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/v${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
 ARG NMTHREADS=4
 
 ## For PsN Installation
