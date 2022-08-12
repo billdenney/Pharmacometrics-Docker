@@ -10,11 +10,14 @@ execution in a single container.
 ## NONMEM
 
 A dockerfile to build a gfortran-run NONMEM installation.  It will
-require a NONMEM license file (in the same directory nonmem.lic).  See
-the instructions in the comments of the file for how to speed up the
-run (and minimize download time).
+require a NONMEM license file (in the same directory, named
+`nonmem.lic`).  See the instructions in the comments of the file for
+how to speed up the run (and minimize download time).
 
 http://www.iconplc.com/innovation/solutions/nonmem/
+
+Due to NONMEM requirements, NONMEM versions older than 7.5.1 will not
+work with Ubuntu versions after 20.04.
 
 ### Installation
 
@@ -42,29 +45,6 @@ image, you can mount a directory containing the license file in the
 /license directory of your image (note the first -v argument):
 
     docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/nonmem /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
-
-### Running
-
-It is recommended to run NONMEM via Perl-speaks-NONMEM (below).  To
-run NONMEM directly, you can run the following command:
-
-    docker run --rm --user=$(id -u):$(id -g) -v $(pwd):/data -w /data humanpredictions/nonmem /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
-
-### Updating Your License
-
-To update your license file without requiring a rebuild of the Docker
-image, you can mount a directory containing the license file in the
-/license directory of your image (note the first -v argument):
-
-    docker run --rm --user=$(id -u):$(id -g) -v /opt/NONMEM/license:/opt/NONMEM/nm_current/license -v $(pwd):/data -w /data humanpredictions/nonmem /opt/NONMEM/nm_current/run/nmfe CONTROL.mod CONTROL.res
-
-### Installation
-
-* Copy your nonmem license file (named `nonmen.lic`) to the same
-  directory as the Dockerfile.
-* Have your NONMEM zip file password handy
-* See the instructions in the top of the Dockerfile for the command
-  to run.
 
 ## Perl-speaks-NONMEM
 
