@@ -12,7 +12,7 @@
 # files and then serving them from a local directory:
 #
 # wget --auth-no-challenge https://nonmem.iconplc.com/nonmem751/NONMEM751.zip
-# python -m SimpleHTTPServer
+# python3 -m http.server
 #
 # Then in a separate terminal, give your local server for the
 # NONMEMURL and NMQUALURL build arguments:
@@ -24,7 +24,7 @@
 #  -f NONMEM.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
@@ -61,12 +61,17 @@ COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
 
 ## Install NONMEM and then clean out unnecessary files to shrink
 ## the image
+
+# the "if [ ! -d "/tmp/nm${NONMEM_VERSION_NO_DOTS}CD" ] ; then ln -s . nm${NONMEM_VERSION_NO_DOTS}CD ; fi"
+# line is for NONMEM 7.2.0
 RUN cd /tmp \
     && wget \
 	 -nv --no-check-certificate --auth-no-challenge \
-         -O /tmp/NONMEM${NONMEM_VERSION}.zip \
+         -O /tmp/NONMEM.zip \
 	 ${NONMEMURL} \
-    && unzip -P ${NONMEMZIPPASS} NONMEM${NONMEM_VERSION}.zip \
+    && unzip -P ${NONMEMZIPPASS} NONMEM.zip \
+    && ls /tmp \
+    && if [ ! -d "/tmp/nm${NONMEM_VERSION_NO_DOTS}CD" ] ; then ln -s . nm${NONMEM_VERSION_NO_DOTS}CD ; fi \
     && cd /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
     && bash \
          SETUP${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
@@ -81,18 +86,21 @@ RUN cd /tmp \
          unzip \
          nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}e.zip \
          nonmem${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}r.zip \
+    && ln -s /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} /opt/NONMEM/nm_current \
+    && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
+             /opt/NONMEM/nm_current/util/nmfe \
     && rm -r /tmp/* \
-    && rm -f /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
+    && rm -f /opt/NONMEM/nm_current/mpi/mpi_ling/libmpich.a \
     && ln -s \
         /usr/lib/x86_64-linux-gnu/libmpich.a \
-	/opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/mpi/mpi_ling/libmpich.a \
+	/opt/NONMEM/nm_current/mpi/mpi_ling/libmpich.a \
     && echo "Update the default number of nodes for parallel NONMEM in the mpilinux_XX.pnm file" \
     && for NMNODES in 2 4 6 8 10 12 14 16 18 20 22 24 28 32 48 64 128; do \
          sed 's/\[nodes\]=8/\[nodes\]='$NMNODES'/' \
-           /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux8.pnm > \
-           /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/run/mpilinux_$NMNODES.pnm ; \
+           /opt/NONMEM/nm_current/run/mpilinux8.pnm > \
+           /opt/NONMEM/nm_current/run/mpilinux_$NMNODES.pnm ; \
        done \
-    && (cd /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} && \
+    && (cd /opt/NONMEM/nm_current && \
         rm -rf \
             examples/ \
             guides/ \
@@ -147,12 +155,6 @@ RUN cd /tmp \
             util/finish_Linux_f95 \
             util/finish_Linux_g95 \
             util/finish_SunOS*)
-
-RUN cd / \
-    && mkdir -p /opt/NONMEM \
-    && ln -s /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS} /opt/NONMEM/nm_current \
-    && ln -s /opt/NONMEM/nm_current/util/nmfe${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION} \
-             /opt/NONMEM/nm_current/util/nmfe
 
 # Update the NONMEM license file if it is available in the /license
 # directory (/opt/NONMEM/nm_current/license should be mounted from the
