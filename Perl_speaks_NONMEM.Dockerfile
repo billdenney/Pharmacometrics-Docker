@@ -2,7 +2,7 @@
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:5.2.6-1 \
+#  -t humanpredictions/psn:5.3.0-1 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM.Dockerfile .
 
@@ -19,9 +19,6 @@ RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
        cpanminus \
-       libtest-exception-perl \
-       libyaml-libyaml-perl \
-       libinline-perl \
        expect \
        \
        r-base pandoc \
@@ -41,7 +38,9 @@ RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
 ## Install perl modules using cpanminus
 RUN cpanm Math::Random \
  && cpanm MouseX::Params::Validate \
- && cpanm Archive::Zip
+ && cpanm Archive::Zip \
+ && cpanm Test::Exception \
+ && cpanm Test::More
 
 ## Install and test PsN
 ENV PSN_VERSION_MAJOR=5
