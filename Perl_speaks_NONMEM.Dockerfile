@@ -2,7 +2,7 @@
 
 # Build with the following command:
 # docker build \
-#  -t humanpredictions/psn:5.2.6-1 \
+#  -t humanpredictions/psn:5.3.0-1 \
 #  -t humanpredictions/psn:latest \
 #  -f Perl_speaks_NONMEM.Dockerfile .
 
@@ -18,15 +18,7 @@ MAINTAINER William Denney <wdenney@humanpredictions.com>
 RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
-       libmath-random-perl \
-       libmoose-perl \
-       libmoosex-params-validate-perl \
-       libstatistics-distributions-perl \
-       libarchive-zip-perl \
-       libfile-copy-recursive-perl \
-       libtest-exception-perl \
-       libyaml-libyaml-perl \
-       libinline-perl \
+       cpanminus \
        expect \
        \
        r-base pandoc \
@@ -43,10 +35,17 @@ RUN ln -fs /usr/share/zoneinfo/UCT /etc/localtime \
               /usr/share/locale/ \
               /etc/apt/sources.list.d/multi.list
 
+## Install perl modules using cpanminus
+RUN cpanm Math::Random \
+ && cpanm MouseX::Params::Validate \
+ && cpanm Archive::Zip \
+ && cpanm Test::Exception \
+ && cpanm Test::More
+
 ## Install and test PsN
 ENV PSN_VERSION_MAJOR=5
-ENV PSN_VERSION_MINOR=2
-ENV PSN_VERSION_PATCH=6
+ENV PSN_VERSION_MINOR=3
+ENV PSN_VERSION_PATCH=0
 ENV PSN_VERSION=${PSN_VERSION_MAJOR}.${PSN_VERSION_MINOR}.${PSN_VERSION_PATCH}
 ENV PSN_VERSION_UNDERSCORE=${PSN_VERSION_MAJOR}_${PSN_VERSION_MINOR}_${PSN_VERSION_PATCH}
 ARG PSNURL=https://github.com/UUPharmacometrics/PsN/releases/download/v${PSN_VERSION}/PsN-${PSN_VERSION}.tar.gz
