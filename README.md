@@ -33,13 +33,10 @@ outcomes, which differ from prior documentation in several cases.
 | 7.4.1  | yes   | yes   | yes   | yes   | no    | no    |
 | 7.4.2  | yes   | yes   | yes   | yes   | no    | no    |
 | 7.4.3  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.4.4  | yes   | yes   | no*   | yes   | no    | no    |
+| 7.4.4  | yes   | yes   | yes   | yes   | no    | no    |
 | 7.5.0  | yes   | yes   | yes   | yes   | no    | no    |
 | 7.5.1  | yes   | yes   | yes   | yes   | yes   | yes   |
-| 7.6.0  | yes   | yes   | yes   | yes   | yes   | no    |
-
-\* 7.4.4 on Ubuntu 18.04 failed during testing; this may be a transient
-failure as the surrounding versions (14.04, 16.04, 20.04) all succeed.
+| 7.6.0  | yes   | yes   | yes   | yes   | yes   | yes   |
 
 **Notable findings vs. prior documentation:**
 
@@ -47,8 +44,14 @@ failure as the surrounding versions (14.04, 16.04, 20.04) all succeed.
   versions including 22.04 and 24.04.  The prior claim that NONMEM
   older than 7.5.1 fails on Ubuntu > 20.04 applies to 7.4.x–7.5.0
   specifically, not to 7.2.x or 7.3.x.
-- NONMEM 7.6.0 fails on Ubuntu 24.04 (amd64) despite succeeding on
-  22.04.
+- NONMEM 7.4.x and 7.5.0 fail on Ubuntu 22.04 and 24.04 because
+  gfortran 11+ (shipped in Ubuntu 22.04) enforces stricter Fortran
+  standard compliance than gfortran 9 (Ubuntu 20.04).  The NONMEM
+  7.4.x/7.5.0 Fortran source contains constructs that gfortran 9
+  accepted but gfortran 11+ rejects as errors: index variables
+  redefined inside DO loops, rank mismatches in actual arguments, and
+  INTEGER(8)/INTEGER(4) type mismatches.  NONMEM 7.5.1 and later have
+  corrected Fortran source and compile successfully with gfortran 11+.
 
 #### ARM64 (linux/arm64) — Raspberry Pi 4/5 and AWS Graviton2/3/4
 
@@ -77,10 +80,10 @@ Raspberry Pi 3 and older (32-bit ARM, linux/arm/v7) are not supported.
 Use `build_matrix.sh` to build all compatible combinations in parallel
 (up to 16 at a time by default):
 
-    # amd64 only (40 combinations)
+    # amd64 only (54 combinations)
     ./build_matrix.sh
 
-    # amd64 + arm64 (48 combinations; requires buildx + QEMU — see script header)
+    # amd64 + arm64 (62 combinations; requires buildx + QEMU — see script header)
     ./build_matrix.sh --arm64
 
     # Control parallelism
@@ -90,17 +93,19 @@ Prerequisites: copy `nonmem_passwords.conf.example` to
 `nonmem_passwords.conf` (gitignored) and adjust paths/passwords.
 Results are written to `build_matrix.log`.
 
+The script uses BuildKit bind mounts (`--build-context
+nonmem_zips=...`) to pass the NONMEM zip files into the build without
+copying them into any image layer, keeping final image sizes lean.
+No local HTTP server is required.
+
 ### Installation
 
-* Copy your nonmem license file (named `nonmen.lic` to the same
+* Copy your nonmem license file (named `nonmem.lic`) to the same
   directory as the Dockerfile.
-* Have your NONMEM zip file password handy
-* See the instructions in the top of the Dockerfile for the command
-  to run.
-* For NONMEM, automatic download from Icon may be unreliable
-  (https://github.com/billdenney/Pharmacometrics-Docker/issues/2).
-  Manual download and serving the file from a local webserver is
-  recommended.  (See the top of the Dockerfile for instructions.)
+* Have your NONMEM zip file and its password handy.
+* Pass the zip file via `--build-context nonmem_zips=/path/to/zips`
+  (see the top of the Dockerfile for the full build command).  The zip
+  is never baked into the image.
 
 ### Running
 

@@ -26,7 +26,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONF_FILE="${SCRIPT_DIR}/nonmem_passwords.conf"
 LOG_FILE="${SCRIPT_DIR}/build_matrix.log"
-HTTP_PORT=8888
 MAX_JOBS=16
 BUILD_ARM64=false
 
@@ -55,18 +54,15 @@ if [[ ! -f "${NONMEM_ZIP_DIR}/nonmem.lic" ]]; then
   exit 1
 fi
 
+# --- buildx pre-flight check ---
+if ! docker buildx version &>/dev/null; then
+  echo "ERROR: docker buildx is not available." >&2
+  echo "This script requires docker buildx (included with Docker 20.10+)." >&2
+  exit 1
+fi
+
 # --- ARM64 pre-flight check ---
 if [[ "${BUILD_ARM64}" == true ]]; then
-  if ! docker buildx version &>/dev/null; then
-    echo "ERROR: docker buildx is not available." >&2
-    echo "ARM64 builds require QEMU and buildx. Run:" >&2
-    echo "  sudo apt-get install qemu-user-static binfmt-support" >&2
-    echo "  docker run --privileged --rm tonistiigi/binfmt --install all" >&2
-    echo "  docker buildx create --name multiplatform --driver docker-container \\" >&2
-    echo "    --driver-opt network=host --use" >&2
-    echo "  docker buildx inspect --bootstrap" >&2
-    exit 1
-  fi
   if ! docker buildx inspect 2>/dev/null | grep -q "linux/arm64"; then
     echo "ERROR: linux/arm64 is not available in your current buildx builder." >&2
     echo "Run the ARM64 setup steps:" >&2
@@ -79,33 +75,8 @@ if [[ "${BUILD_ARM64}" == true ]]; then
   fi
 fi
 
-# --- Cleanup trap ---
-HTTP_PID=""
-cleanup() {
-  [[ -n "${HTTP_PID}" ]] && kill "${HTTP_PID}" 2>/dev/null || true
-  # nonmem.lic is left in place (it is gitignored); remove it manually if desired
-}
-trap cleanup EXIT
-
 # --- Copy license into build context ---
 cp "${NONMEM_ZIP_DIR}/nonmem.lic" "${SCRIPT_DIR}/nonmem.lic"
-
-# --- Kill any existing process on HTTP_PORT to avoid port conflict ---
-fuser -k "${HTTP_PORT}/tcp" 2>/dev/null || true
-sleep 1
-
-# --- Start local HTTP server ---
-echo "Starting HTTP server on port ${HTTP_PORT} serving ${NONMEM_ZIP_DIR} ..."
-(cd "${NONMEM_ZIP_DIR}" && python3 -m http.server "${HTTP_PORT}" --bind 127.0.0.1 \
-  >/dev/null 2>&1) &
-HTTP_PID=$!
-sleep 1  # give the server a moment to start
-
-# Verify it started
-if ! kill -0 "${HTTP_PID}" 2>/dev/null; then
-  echo "ERROR: HTTP server failed to start on port ${HTTP_PORT}" >&2
-  exit 1
-fi
 
 # --- Initialize log ---
 : > "${LOG_FILE}"
@@ -143,7 +114,7 @@ is_compatible_arm64() {
   return 0
 }
 
-# --- Parallel job tracking (by PID, not wait -n, so the HTTP server job can't interfere) ---
+# --- Parallel job tracking (by PID) ---
 declare -a build_pids=()
 
 run_build() {
@@ -172,13 +143,15 @@ for entry in "${NONMEM_VERSIONS[@]}"; do
   for ubuntu in "${AMD64_UBUNTU_VERSIONS[@]}"; do
     tag="humanpredictions/nonmem:${major}.${minor}.${patch}-ubuntu${ubuntu}-amd64"
     run_build "${tag}" \
-      docker build \
-        --network=host \
+      docker buildx build \
+        --platform linux/amd64 \
+        --load \
+        --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
         --build-arg UBUNTU_VERSION="${ubuntu}" \
         --build-arg NONMEM_MAJOR_VERSION="${major}" \
         --build-arg NONMEM_MINOR_VERSION="${minor}" \
         --build-arg NONMEM_PATCH_VERSION="${patch}" \
-        --build-arg NONMEMURL="http://127.0.0.1:${HTTP_PORT}/${zipfile}" \
+        --build-arg NONMEM_ZIPFILE="${zipfile}" \
         --build-arg NONMEMZIPPASS="${password}" \
         -t "${tag}" \
         -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
@@ -200,15 +173,15 @@ if [[ "${BUILD_ARM64}" == true ]]; then
       run_build "${tag}" \
         docker buildx build \
           --platform linux/arm64 \
-          --network=host \
+          --load \
+          --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
           --build-arg UBUNTU_VERSION="${ubuntu}" \
           --build-arg NONMEM_MAJOR_VERSION="${major}" \
           --build-arg NONMEM_MINOR_VERSION="${minor}" \
           --build-arg NONMEM_PATCH_VERSION="${patch}" \
-          --build-arg NONMEMURL="http://127.0.0.1:${HTTP_PORT}/${zipfile}" \
+          --build-arg NONMEM_ZIPFILE="${zipfile}" \
           --build-arg NONMEMZIPPASS="${password}" \
           -t "${tag}" \
-          --load \
           -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
           "${SCRIPT_DIR}"
     done
@@ -225,8 +198,6 @@ echo "" | tee -a "${LOG_FILE}"
 echo "=== Summary ===" | tee -a "${LOG_FILE}"
 successes=$(grep -c "^SUCCESS:" "${LOG_FILE}" || true)
 failures=$(grep -c "^FAILED:" "${LOG_FILE}" || true)
-skipped=$(grep -c "^SKIP" "${LOG_FILE}" || true)
 echo "Succeeded: ${successes}" | tee -a "${LOG_FILE}"
 echo "Failed:    ${failures}"  | tee -a "${LOG_FILE}"
-echo "Skipped:   ${skipped}"   | tee -a "${LOG_FILE}"
 echo "Build matrix completed at $(date)" | tee -a "${LOG_FILE}"
