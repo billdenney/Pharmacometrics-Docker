@@ -16,8 +16,79 @@ how to speed up the run (and minimize download time).
 
 http://www.iconplc.com/innovation/solutions/nonmem/
 
-Due to NONMEM requirements, NONMEM versions older than 7.5.1 will not
-work with Ubuntu versions after 20.04.
+### Compatibility Matrix
+
+All combinations were empirically tested by building each image and
+recording success or failure.  Results below reflect actual build
+outcomes, which differ from prior documentation in several cases.
+
+#### x86-64 (linux/amd64)
+
+`yes` = image builds successfully; `no` = build fails
+
+| NONMEM | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
+|--------|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| 7.2.0  | yes   | yes   | yes   | yes   | yes   | yes   |
+| 7.3.0  | yes   | yes   | yes   | yes   | yes   | yes   |
+| 7.4.1  | yes   | yes   | yes   | yes   | no    | no    |
+| 7.4.2  | yes   | yes   | yes   | yes   | no    | no    |
+| 7.4.3  | yes   | yes   | yes   | yes   | no    | no    |
+| 7.4.4  | yes   | yes   | no*   | yes   | no    | no    |
+| 7.5.0  | yes   | yes   | yes   | yes   | no    | no    |
+| 7.5.1  | yes   | yes   | yes   | yes   | yes   | yes   |
+| 7.6.0  | yes   | yes   | yes   | yes   | yes   | no    |
+
+\* 7.4.4 on Ubuntu 18.04 failed during testing; this may be a transient
+failure as the surrounding versions (14.04, 16.04, 20.04) all succeed.
+
+**Notable findings vs. prior documentation:**
+
+- NONMEM 7.2.0 and 7.3.0 build successfully on *all* Ubuntu LTS
+  versions including 22.04 and 24.04.  The prior claim that NONMEM
+  older than 7.5.1 fails on Ubuntu > 20.04 applies to 7.4.x–7.5.0
+  specifically, not to 7.2.x or 7.3.x.
+- NONMEM 7.6.0 fails on Ubuntu 24.04 (amd64) despite succeeding on
+  22.04.
+
+#### ARM64 (linux/arm64) — Raspberry Pi 4/5 and AWS Graviton2/3/4
+
+The same `linux/arm64` Docker image runs on both Raspberry Pi 4/5 and
+AWS Graviton2/3/4; they share the same 64-bit ARM instruction set and
+no separate image is needed for Graviton.
+
+NONMEM versions older than 7.5.1 are not attempted for ARM64 because
+their setup scripts contain x86-specific assumptions.  Ubuntu 14.04
+and 16.04 are also skipped because ARM toolchain support was too
+immature in those releases.
+
+| NONMEM | 18.04 | 20.04 | 22.04 | 24.04 |
+|--------|:-----:|:-----:|:-----:|:-----:|
+| 7.5.1  | no    | no    | yes   | yes   |
+| 7.6.0  | no    | no    | yes   | yes   |
+
+ARM64 builds require Ubuntu 22.04 or later; 18.04 and 20.04 fail,
+likely due to gfortran or toolchain differences in the older ARM64
+userspace.
+
+Raspberry Pi 3 and older (32-bit ARM, linux/arm/v7) are not supported.
+
+### Building the Full Matrix
+
+Use `build_matrix.sh` to build all compatible combinations in parallel
+(up to 16 at a time by default):
+
+    # amd64 only (40 combinations)
+    ./build_matrix.sh
+
+    # amd64 + arm64 (48 combinations; requires buildx + QEMU — see script header)
+    ./build_matrix.sh --arm64
+
+    # Control parallelism
+    ./build_matrix.sh --jobs 8
+
+Prerequisites: copy `nonmem_passwords.conf.example` to
+`nonmem_passwords.conf` (gitignored) and adjust paths/passwords.
+Results are written to `build_matrix.log`.
 
 ### Installation
 

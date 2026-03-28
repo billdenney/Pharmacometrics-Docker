@@ -24,7 +24,9 @@
 #  -f NONMEM.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
-FROM ubuntu:22.04
+# Override with --build-arg UBUNTU_VERSION=20.04 etc. for older NONMEM versions
+ARG UBUNTU_VERSION=24.04
+FROM ubuntu:${UBUNTU_VERSION}
 
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
@@ -92,8 +94,8 @@ RUN cd /tmp \
     && rm -r /tmp/* \
     && rm -f /opt/NONMEM/nm_current/mpi/mpi_ling/libmpich.a \
     && ln -s \
-        /usr/lib/x86_64-linux-gnu/libmpich.a \
-	/opt/NONMEM/nm_current/mpi/mpi_ling/libmpich.a \
+        $(find /usr/lib -name "libmpich.a" | head -1) \
+        /opt/NONMEM/nm_current/mpi/mpi_ling/libmpich.a \
     && echo "Update the default number of nodes for parallel NONMEM in the mpilinux_XX.pnm file" \
     && for NMNODES in 2 4 6 8 10 12 14 16 18 20 22 24 28 32 48 64 128; do \
          sed 's/\[nodes\]=8/\[nodes\]='$NMNODES'/' \
