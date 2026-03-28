@@ -1,26 +1,13 @@
-# Dockerfile to build NONMEM 7.5.1 with MPI
+# syntax=docker/dockerfile:1
+# Dockerfile to build NONMEM with MPI
 
-# Build with the following command:
-# docker build \
+# Build with the following command (place the NONMEM zip in the same directory
+# or pass --build-context nonmem_zips=/path/to/zips):
+# docker buildx build \
+#  --build-context nonmem_zips=/path/to/nonmem/zips \
 #  --build-arg NONMEMZIPPASS=[your password] \
-#  -t humanpredictions/nonmem:7.5.1-gfortran-1 \
-#  -t humanpredictions/nonmem:latest \
-#  -f NONMEM.Dockerfile .
-
-# Installation can be sped up for multiple installations (like
-# nmqual, NONMEM, and PsN) by pre-downloading required zip
-# files and then serving them from a local directory:
-#
-# wget --auth-no-challenge https://nonmem.iconplc.com/nonmem751/NONMEM751.zip
-# python3 -m http.server
-#
-# Then in a separate terminal, give your local server for the
-# NONMEMURL and NMQUALURL build arguments:
-# docker build \
-#  --build-arg NONMEMZIPPASS=[your password] \
-#  --build-arg NONMEMURL=http://example.com/NONMEM7.5.1.zip \
-#  -t humanpredictions/nonmem:7.5.1-gfortran-1 \
-#  -t humanpredictions/nonmem:latest \
+#  --build-arg NONMEM_ZIPFILE=NONMEM751.zip \
+#  -t humanpredictions/nonmem:7.5.1 \
 #  -f NONMEM.Dockerfile .
 
 # Set the base image to a long-term Ubuntu release
@@ -34,7 +21,6 @@ MAINTAINER William Denney <wdenney@humanpredictions.com>
 # Install:
 # gfortran,
 # MPI,
-# wget,
 # and unzip
 # (then clean up the image as much as possible)
 RUN apt-get update \
@@ -42,7 +28,6 @@ RUN apt-get update \
        gfortran \
        libmpich-dev \
        mpich \
-       wget \
        unzip \
     && rm -rf /var/lib/apt/lists/ \
               /var/cache/apt/archives/ \
@@ -55,23 +40,24 @@ ARG NONMEM_MINOR_VERSION=5
 ARG NONMEM_PATCH_VERSION=1
 ENV NONMEM_VERSION_NO_DOTS=${NONMEM_MAJOR_VERSION}${NONMEM_MINOR_VERSION}${NONMEM_PATCH_VERSION}
 ENV NONMEM_VERSION=${NONMEM_MAJOR_VERSION}.${NONMEM_MINOR_VERSION}.${NONMEM_PATCH_VERSION}
-ARG NONMEMURL=https://nonmem.iconplc.com/nonmem${NONMEM_VERSION_NO_DOTS}/NONMEM${NONMEM_VERSION_NO_DOTS}.zip
+ARG NONMEM_ZIPFILE=NONMEM751.zip
 ARG NONMEMZIPPASS
 
 ## Copy the current license file into the image
 COPY nonmem.lic /opt/NONMEM/nm${NONMEM_VERSION_NO_DOTS}/license/nonmem.lic
 
 ## Install NONMEM and then clean out unnecessary files to shrink
-## the image
+## the image.
+##
+## The zip file is provided via a BuildKit bind mount from the nonmem_zips
+## build context (--build-context nonmem_zips=/path/to/zips) so it never
+## appears as a layer in the final image.
 
 # the "if [ ! -d "/tmp/nm${NONMEM_VERSION_NO_DOTS}CD" ] ; then ln -s . nm${NONMEM_VERSION_NO_DOTS}CD ; fi"
 # line is for NONMEM 7.2.0
-RUN cd /tmp \
-    && wget \
-	 -nv --no-check-certificate --auth-no-challenge \
-         -O /tmp/NONMEM.zip \
-	 ${NONMEMURL} \
-    && unzip -P ${NONMEMZIPPASS} NONMEM.zip \
+RUN --mount=type=bind,from=nonmem_zips,source=${NONMEM_ZIPFILE},target=/nonmem_zip/NONMEM.zip \
+    cd /tmp \
+    && unzip -P ${NONMEMZIPPASS} /nonmem_zip/NONMEM.zip \
     && ls /tmp \
     && if [ ! -d "/tmp/nm${NONMEM_VERSION_NO_DOTS}CD" ] ; then ln -s . nm${NONMEM_VERSION_NO_DOTS}CD ; fi \
     && cd /tmp/nm${NONMEM_VERSION_NO_DOTS}CD \
