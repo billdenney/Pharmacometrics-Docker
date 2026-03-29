@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build_matrix.sh — build NONMEM Docker images across Ubuntu LTS × NONMEM versions
+# build_matrix.sh — build NONMEM Docker images across Ubuntu LTS × NONMEM × gfortran versions
 #
 # Usage:
 #   ./build_matrix.sh [--arm64] [--jobs N]
@@ -10,7 +10,7 @@
 #
 # Prerequisites:
 #   1. Copy nonmem_passwords.conf.example to nonmem_passwords.conf and fill in values.
-#   2. Place nonmem.lic in /home/bill/tmp/nonmem/ (or set NONMEM_ZIP_DIR in the conf file).
+#   2. Place nonmem.lic in NONMEM_ZIP_DIR (set in the conf file).
 #
 # ARM64 prerequisites (one-time setup on an x86-64 host):
 #   sudo apt-get install qemu-user-static binfmt-support
@@ -19,7 +19,10 @@
 #     --driver-opt network=host --use
 #   docker buildx inspect --bootstrap
 #
-# Results are written to build_matrix.log in the current directory.
+# Tag format: {NM_VERSION}-ubuntu{UBUNTU}-gfortran{GFC}-{arch}
+# Example:    7.5.1-ubuntu24.04-gfortran13-amd64
+#
+# Results are written to build_matrix.log in the script directory.
 
 set -euo pipefail
 
@@ -103,6 +106,17 @@ AMD64_UBUNTU_VERSIONS=(14.04 16.04 18.04 20.04 22.04 24.04)
 # Ubuntu LTS versions for arm64 builds (14.04/16.04 skipped: ARM toolchain too immature)
 ARM64_UBUNTU_VERSIONS=(18.04 20.04 22.04 24.04)
 
+# gfortran versions available in standard repos (no PPA) per Ubuntu release.
+# Sourced empirically from apt-cache search on each Ubuntu version.
+declare -A UBUNTU_GFORTRAN_VERSIONS=(
+  ["14.04"]="4.4 4.6 4.7 4.8"
+  ["16.04"]="4.7 4.8 4.9 5"
+  ["18.04"]="4.8 5 6 7 8"
+  ["20.04"]="7 8 9 10"
+  ["22.04"]="9 10 11 12"
+  ["24.04"]="9 10 11 12 13 14"
+)
+
 # For ARM64, only attempt NONMEM 7.5.1+ (older versions have x86-specific setup scripts)
 is_compatible_arm64() {
   local major=$1 minor=$2 patch=$3
@@ -131,7 +145,7 @@ run_build() {
 
   # Throttle: when at the cap, wait for the oldest build to free a slot
   if (( ${#build_pids[@]} >= MAX_JOBS )); then
-    wait "${build_pids[0]}" || true   # subshell always exits 0; || true is safety net
+    wait "${build_pids[0]}" || true
     build_pids=("${build_pids[@]:1}")
   fi
 }
@@ -141,21 +155,24 @@ echo "=== amd64 builds ===" | tee -a "${LOG_FILE}"
 for entry in "${NONMEM_VERSIONS[@]}"; do
   read -r major minor patch zipfile password <<< "${entry}"
   for ubuntu in "${AMD64_UBUNTU_VERSIONS[@]}"; do
-    tag="humanpredictions/nonmem:${major}.${minor}.${patch}-ubuntu${ubuntu}-amd64"
-    run_build "${tag}" \
-      docker buildx build \
-        --platform linux/amd64 \
-        --load \
-        --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
-        --build-arg UBUNTU_VERSION="${ubuntu}" \
-        --build-arg NONMEM_MAJOR_VERSION="${major}" \
-        --build-arg NONMEM_MINOR_VERSION="${minor}" \
-        --build-arg NONMEM_PATCH_VERSION="${patch}" \
-        --build-arg NONMEM_ZIPFILE="${zipfile}" \
-        --build-arg NONMEMZIPPASS="${password}" \
-        -t "${tag}" \
-        -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
-        "${SCRIPT_DIR}"
+    for gfc in ${UBUNTU_GFORTRAN_VERSIONS["${ubuntu}"]}; do
+      tag="humanpredictions/nonmem:${major}.${minor}.${patch}-ubuntu${ubuntu}-gfortran${gfc}-amd64"
+      run_build "${tag}" \
+        docker buildx build \
+          --platform linux/amd64 \
+          --load \
+          --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
+          --build-arg UBUNTU_VERSION="${ubuntu}" \
+          --build-arg NONMEM_MAJOR_VERSION="${major}" \
+          --build-arg NONMEM_MINOR_VERSION="${minor}" \
+          --build-arg NONMEM_PATCH_VERSION="${patch}" \
+          --build-arg NONMEM_ZIPFILE="${zipfile}" \
+          --build-arg NONMEMZIPPASS="${password}" \
+          --build-arg GFORTRAN_VERSION="${gfc}" \
+          -t "${tag}" \
+          -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
+          "${SCRIPT_DIR}"
+    done
   done
 done
 
@@ -169,21 +186,24 @@ if [[ "${BUILD_ARM64}" == true ]]; then
       continue
     fi
     for ubuntu in "${ARM64_UBUNTU_VERSIONS[@]}"; do
-      tag="humanpredictions/nonmem:${major}.${minor}.${patch}-ubuntu${ubuntu}-arm64"
-      run_build "${tag}" \
-        docker buildx build \
-          --platform linux/arm64 \
-          --load \
-          --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
-          --build-arg UBUNTU_VERSION="${ubuntu}" \
-          --build-arg NONMEM_MAJOR_VERSION="${major}" \
-          --build-arg NONMEM_MINOR_VERSION="${minor}" \
-          --build-arg NONMEM_PATCH_VERSION="${patch}" \
-          --build-arg NONMEM_ZIPFILE="${zipfile}" \
-          --build-arg NONMEMZIPPASS="${password}" \
-          -t "${tag}" \
-          -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
-          "${SCRIPT_DIR}"
+      for gfc in ${UBUNTU_GFORTRAN_VERSIONS["${ubuntu}"]}; do
+        tag="humanpredictions/nonmem:${major}.${minor}.${patch}-ubuntu${ubuntu}-gfortran${gfc}-arm64"
+        run_build "${tag}" \
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            --build-context nonmem_zips="${NONMEM_ZIP_DIR}" \
+            --build-arg UBUNTU_VERSION="${ubuntu}" \
+            --build-arg NONMEM_MAJOR_VERSION="${major}" \
+            --build-arg NONMEM_MINOR_VERSION="${minor}" \
+            --build-arg NONMEM_PATCH_VERSION="${patch}" \
+            --build-arg NONMEM_ZIPFILE="${zipfile}" \
+            --build-arg NONMEMZIPPASS="${password}" \
+            --build-arg GFORTRAN_VERSION="${gfc}" \
+            -t "${tag}" \
+            -f "${SCRIPT_DIR}/NONMEM.Dockerfile" \
+            "${SCRIPT_DIR}"
+      done
     done
   done
 fi

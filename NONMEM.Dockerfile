@@ -9,6 +9,11 @@
 #  --build-arg NONMEM_ZIPFILE=NONMEM751.zip \
 #  -t humanpredictions/nonmem:7.5.1 \
 #  -f NONMEM.Dockerfile .
+#
+# For NONMEM 7.4.x and 7.5.0 on Ubuntu 22.04+, add:
+#  --build-arg GFORTRAN_VERSION=9
+# This installs gfortran-9 (available in standard Ubuntu 22.04/24.04 repos)
+# which is compatible with the older Fortran source in those NONMEM versions.
 
 # Set the base image to a long-term Ubuntu release
 # Override with --build-arg UBUNTU_VERSION=20.04 etc. for older NONMEM versions
@@ -18,17 +23,28 @@ FROM ubuntu:${UBUNTU_VERSION}
 # Dockerfile Maintainer
 MAINTAINER William Denney <wdenney@humanpredictions.com>
 
+# GFORTRAN_VERSION: if set (e.g. "9"), installs gfortran-9 and symlinks it as
+# the default gfortran.  Leave unset to use the Ubuntu-default gfortran.
+# Required for NONMEM 7.4.x and 7.5.0 on Ubuntu 22.04+ (gfortran 11+ is too
+# strict for those versions' Fortran source).
+ARG GFORTRAN_VERSION=""
+
 # Install:
-# gfortran,
+# gfortran (version-pinned if GFORTRAN_VERSION is set),
 # MPI,
 # and unzip
 # (then clean up the image as much as possible)
 RUN apt-get update \
+    && _GFC_PKG="${GFORTRAN_VERSION:+gfortran-${GFORTRAN_VERSION}}" \
+    && _GFC_PKG="${_GFC_PKG:-gfortran}" \
     && apt-get install --yes --no-install-recommends \
-       gfortran \
+       "${_GFC_PKG}" \
        libmpich-dev \
        mpich \
        unzip \
+    && if [ -n "${GFORTRAN_VERSION:-}" ]; then \
+           ln -sf "/usr/bin/gfortran-${GFORTRAN_VERSION}" /usr/bin/gfortran; \
+       fi \
     && rm -rf /var/lib/apt/lists/ \
               /var/cache/apt/archives/ \
               /usr/share/doc/ \

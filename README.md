@@ -18,72 +18,140 @@ http://www.iconplc.com/innovation/solutions/nonmem/
 
 ### Compatibility Matrix
 
-All combinations were empirically tested by building each image and
-recording success or failure.  Results below reflect actual build
-outcomes, which differ from prior documentation in several cases.
+All combinations were empirically tested by building each Docker image
+and recording success or failure.  Image tags encode the exact NONMEM
+version, Ubuntu base, gfortran version, and CPU architecture — every
+cell in the tables below corresponds to a distinct image tag.
+
+Tag format: `{NM_VERSION}-ubuntu{UBUNTU}-gfortran{GFC}-{arch}`
+Example: `7.4.1-ubuntu22.04-gfortran9-amd64`
+
+Legend: `yes` = image builds successfully · `no` = build fails ·
+`—` = gfortran version not available in that Ubuntu's standard repos
 
 #### x86-64 (linux/amd64)
 
-`yes` = image builds successfully; `no` = build fails
+##### NONMEM 7.2.0 and 7.3.0 — all gfortran versions succeed
 
-| NONMEM | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
-|--------|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
-| 7.2.0  | yes   | yes   | yes   | yes   | yes   | yes   |
-| 7.3.0  | yes   | yes   | yes   | yes   | yes   | yes   |
-| 7.4.1  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.4.2  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.4.3  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.4.4  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.5.0  | yes   | yes   | yes   | yes   | no    | no    |
-| 7.5.1  | yes   | yes   | yes   | yes   | yes   | yes   |
-| 7.6.0  | yes   | yes   | yes   | yes   | yes   | yes   |
+| gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
+|:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| 4.4      | yes   | —     | —     | —     | —     | —     |
+| 4.6      | yes   | —     | —     | —     | —     | —     |
+| 4.7      | yes   | yes   | —     | —     | —     | —     |
+| 4.8      | yes   | yes   | yes   | —     | —     | —     |
+| 4.9      | —     | yes   | —     | —     | —     | —     |
+| 5        | —     | yes   | yes   | —     | —     | —     |
+| 6        | —     | —     | yes   | —     | —     | —     |
+| 7        | —     | —     | yes   | yes   | —     | —     |
+| 8        | —     | —     | yes   | yes   | —     | —     |
+| 9        | —     | —     | —     | yes   | yes   | yes   |
+| 10       | —     | —     | —     | yes   | yes   | yes   |
+| 11       | —     | —     | —     | —     | yes   | yes   |
+| 12       | —     | —     | —     | —     | yes   | yes   |
+| 13       | —     | —     | —     | —     | —     | yes   |
+| 14       | —     | —     | —     | —     | —     | yes   |
 
-**Notable findings vs. prior documentation:**
+##### NONMEM 7.4.1, 7.4.2, 7.4.3, 7.4.4, and 7.5.0 — gfortran ≥ 10 fails
 
-- NONMEM 7.2.0 and 7.3.0 build successfully on *all* Ubuntu LTS
-  versions including 22.04 and 24.04.  The prior claim that NONMEM
-  older than 7.5.1 fails on Ubuntu > 20.04 applies to 7.4.x–7.5.0
-  specifically, not to 7.2.x or 7.3.x.
-- NONMEM 7.4.x and 7.5.0 fail on Ubuntu 22.04 and 24.04 because
-  gfortran 11+ (shipped in Ubuntu 22.04) enforces stricter Fortran
-  standard compliance than gfortran 9 (Ubuntu 20.04).  The NONMEM
-  7.4.x/7.5.0 Fortran source contains constructs that gfortran 9
-  accepted but gfortran 11+ rejects as errors: index variables
-  redefined inside DO loops, rank mismatches in actual arguments, and
-  INTEGER(8)/INTEGER(4) type mismatches.  NONMEM 7.5.1 and later have
-  corrected Fortran source and compile successfully with gfortran 11+.
+| gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
+|:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| 4.4      | yes   | —     | —     | —     | —     | —     |
+| 4.6      | yes   | —     | —     | —     | —     | —     |
+| 4.7      | yes   | yes   | —     | —     | —     | —     |
+| 4.8      | yes   | yes   | yes   | —     | —     | —     |
+| 4.9      | —     | yes   | —     | —     | —     | —     |
+| 5        | —     | yes   | yes   | —     | —     | —     |
+| 6        | —     | —     | yes   | —     | —     | —     |
+| 7        | —     | —     | yes   | yes   | —     | —     |
+| 8        | —     | —     | yes   | yes   | —     | —     |
+| 9        | —     | —     | —     | yes   | yes   | yes   |
+| 10       | —     | —     | —     | no¹   | no¹   | no¹   |
+| 11       | —     | —     | —     | —     | no¹   | no¹   |
+| 12       | —     | —     | —     | —     | no¹   | no¹   |
+| 13       | —     | —     | —     | —     | —     | no¹   |
+| 14       | —     | —     | —     | —     | —     | no¹   |
+
+##### NONMEM 7.5.1 and 7.6.0 — gfortran 4.4 fails
+
+| gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
+|:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| 4.4      | no²   | —     | —     | —     | —     | —     |
+| 4.6      | yes   | —     | —     | —     | —     | —     |
+| 4.7      | yes   | yes   | —     | —     | —     | —     |
+| 4.8      | yes   | yes   | yes   | —     | —     | —     |
+| 4.9      | —     | yes   | —     | —     | —     | —     |
+| 5        | —     | yes   | yes   | —     | —     | —     |
+| 6        | —     | —     | yes   | —     | —     | —     |
+| 7        | —     | —     | yes   | yes   | —     | —     |
+| 8        | —     | —     | yes   | yes   | —     | —     |
+| 9        | —     | —     | —     | yes   | yes   | yes   |
+| 10       | —     | —     | —     | yes   | yes   | yes   |
+| 11       | —     | —     | —     | —     | yes   | yes   |
+| 12       | —     | —     | —     | —     | yes   | yes   |
+| 13       | —     | —     | —     | —     | —     | yes   |
+| 14       | —     | —     | —     | —     | —     | yes   |
+
+#### Failure footnotes
+
+¹ **gfortran ≥ 10 + NONMEM 7.4.x / 7.5.0**: GCC 10 introduced stricter
+enforcement of Fortran standard compliance.  The NONMEM 7.4.x and 7.5.0
+Fortran source contains constructs that gfortran 9 (and earlier) accepted
+but gfortran 10+ rejects as hard errors: rank mismatches between actual
+arguments, INTEGER(8)/INTEGER(4) type mismatches, and index variables
+redefined inside DO loops.  NONMEM 7.5.1 corrects these issues and
+compiles cleanly with all gfortran versions.  Use gfortran 9 (e.g.,
+`-ubuntu22.04-gfortran9-amd64`) if you need NONMEM 7.4.x or 7.5.0 on a
+modern Ubuntu base.
+
+² **gfortran 4.4 + NONMEM 7.5.1 / 7.6.0**: The NONMEM 7.5.x and 7.6.x
+setup scripts pass `-ffpe-summary=none` to the Fortran compiler.  This
+flag was introduced in GCC 4.6; gfortran 4.4 does not recognize it and
+fails immediately during resource file compilation.  All gfortran versions
+≥ 4.6 succeed with NONMEM 7.5.1 and 7.6.0.
 
 #### ARM64 (linux/arm64) — Raspberry Pi 4/5 and AWS Graviton2/3/4
 
 The same `linux/arm64` Docker image runs on both Raspberry Pi 4/5 and
-AWS Graviton2/3/4; they share the same 64-bit ARM instruction set and
-no separate image is needed for Graviton.
+AWS Graviton2/3/4; they share the same 64-bit ARM instruction set and no
+separate image is needed for Graviton.
 
 NONMEM versions older than 7.5.1 are not attempted for ARM64 because
-their setup scripts contain x86-specific assumptions.  Ubuntu 14.04
-and 16.04 are also skipped because ARM toolchain support was too
-immature in those releases.
+their setup scripts contain x86-specific assumptions.  Ubuntu 14.04 and
+16.04 are also skipped because ARM toolchain support was too immature in
+those releases.
 
-| NONMEM | 18.04 | 20.04 | 22.04 | 24.04 |
-|--------|:-----:|:-----:|:-----:|:-----:|
-| 7.5.1  | no    | no    | yes   | yes   |
-| 7.6.0  | no    | no    | yes   | yes   |
+##### NONMEM 7.5.1 and 7.6.0 — arm64
 
-ARM64 builds require Ubuntu 22.04 or later; 18.04 and 20.04 fail,
-likely due to gfortran or toolchain differences in the older ARM64
-userspace.
+| gfortran | 18.04 | 20.04 | 22.04 | 24.04 |
+|:--------:|:-----:|:-----:|:-----:|:-----:|
+| 4.8      | no³   | —     | —     | —     |
+| 5        | no³   | —     | —     | —     |
+| 6        | no³   | —     | —     | —     |
+| 7        | no³   | no³   | —     | —     |
+| 8        | no³   | no³   | —     | —     |
+| 9        | —     | no³   | yes   | yes   |
+| 10       | —     | no³   | yes   | yes   |
+| 11       | —     | —     | yes   | yes   |
+| 12       | —     | —     | yes   | yes   |
+| 13       | —     | —     | —     | yes   |
+| 14       | —     | —     | —     | yes   |
+
+³ **arm64 + Ubuntu < 22.04**: ARM64 builds fail on Ubuntu 18.04 and 20.04
+regardless of gfortran version, likely due to ABI or runtime library
+differences in the older ARM64 userspace.  Ubuntu 22.04 and later work
+correctly.
 
 Raspberry Pi 3 and older (32-bit ARM, linux/arm/v7) are not supported.
 
 ### Building the Full Matrix
 
-Use `build_matrix.sh` to build all compatible combinations in parallel
-(up to 16 at a time by default):
+Use `build_matrix.sh` to build all combinations in parallel (up to 16 at
+a time by default):
 
-    # amd64 only (54 combinations)
+    # amd64 only (243 combinations)
     ./build_matrix.sh
 
-    # amd64 + arm64 (62 combinations; requires buildx + QEMU — see script header)
+    # amd64 + arm64 (281 combinations; requires buildx + QEMU — see script header)
     ./build_matrix.sh --arm64
 
     # Control parallelism
