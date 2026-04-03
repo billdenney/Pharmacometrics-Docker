@@ -26,12 +26,13 @@ cell in the tables below corresponds to a distinct image tag.
 Tag format: `{NM_VERSION}-ubuntu{UBUNTU}-gfortran{GFC}-{arch}`
 Example: `7.4.1-ubuntu22.04-gfortran9-amd64`
 
-Legend: `yes` = image builds successfully · `no` = build fails ·
+Legend: `yes` = image builds and NONMEM runs successfully · `no` = Docker image build fails ·
+`link⁴` = Docker image builds but NONMEM fails to link model executable at runtime ·
 `—` = gfortran version not available in that Ubuntu's standard repos
 
 #### x86-64 (linux/amd64)
 
-##### NONMEM 7.2.0 and 7.3.0 — all gfortran versions succeed
+##### NONMEM 7.2.0 — all gfortran versions succeed
 
 | gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 |:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
@@ -50,6 +51,26 @@ Legend: `yes` = image builds successfully · `no` = build fails ·
 | 12       | —     | —     | —     | —     | yes   | yes   |
 | 13       | —     | —     | —     | —     | —     | yes   |
 | 14       | —     | —     | —     | —     | —     | yes   |
+
+##### NONMEM 7.3.0 — gfortran ≥ 10 builds but fails at runtime
+
+| gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
+|:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| 4.4      | yes   | —     | —     | —     | —     | —     |
+| 4.6      | yes   | —     | —     | —     | —     | —     |
+| 4.7      | yes   | yes   | —     | —     | —     | —     |
+| 4.8      | yes   | yes   | yes   | —     | —     | —     |
+| 4.9      | —     | yes   | —     | —     | —     | —     |
+| 5        | —     | yes   | yes   | —     | —     | —     |
+| 6        | —     | —     | yes   | —     | —     | —     |
+| 7        | —     | —     | yes   | yes   | —     | —     |
+| 8        | —     | —     | yes   | yes   | —     | —     |
+| 9        | —     | —     | —     | yes   | yes   | yes   |
+| 10       | —     | —     | —     | link⁴ | link⁴ | link⁴ |
+| 11       | —     | —     | —     | —     | link⁴ | link⁴ |
+| 12       | —     | —     | —     | —     | link⁴ | link⁴ |
+| 13       | —     | —     | —     | —     | —     | link⁴ |
+| 14       | —     | —     | —     | —     | —     | link⁴ |
 
 ##### NONMEM 7.4.1, 7.4.2, 7.4.3, 7.4.4, and 7.5.0 — gfortran ≥ 10 fails
 
@@ -102,6 +123,19 @@ redefined inside DO loops.  NONMEM 7.5.1 corrects these issues and
 compiles cleanly with all gfortran versions.  Use gfortran 9 (e.g.,
 `-ubuntu22.04-gfortran9-amd64`) if you need NONMEM 7.4.x or 7.5.0 on a
 modern Ubuntu base.
+
+⁴ **gfortran ≥ 10 + NONMEM 7.3.0**: The Docker image builds successfully — the
+NONMEM Fortran source compiles without error — but when `nmfe` attempts to link
+the model-specific executable at runtime it fails with undefined symbol errors
+(`eig_correct_`, `cels_`, `pnm_rw_i_`, and others).  The root cause is that GCC
+10 changed the default from `-fcommon` to `-fno-common`.  Under `-fcommon`,
+duplicate symbol definitions across translation units were silently merged by the
+linker; under `-fno-common` they are treated as undefined or multiply-defined
+references.  NONMEM 7.3.0's pre-compiled `nonmem.a` was built with the old
+assumption and is therefore incompatible with gfortran 10+.  Empirically
+confirmed by running all 54 test models (36 ODE + 18 solved) through every
+affected image: every run failed at the link step, producing no `.lst` output.
+Use gfortran ≤ 9 with NONMEM 7.3.0.
 
 ² **gfortran 4.4 + NONMEM 7.5.1 / 7.6.0**: The NONMEM 7.5.x and 7.6.x
 setup scripts pass `-ffpe-summary=none` to the Fortran compiler.  This
