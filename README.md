@@ -143,6 +143,44 @@ flag was introduced in GCC 4.6; gfortran 4.4 does not recognize it and
 fails immediately during resource file compilation.  All gfortran versions
 ≥ 4.6 succeed with NONMEM 7.5.1 and 7.6.0.
 
+#### Potential workaround for footnote ⁴ (NONMEM 7.3.0 + gfortran ≥ 10)
+
+A workaround exists but is **not applied by default** because it requires a
+non-standard compiler flag that could mask genuine bugs in other code compiled
+in the same image.
+
+The fix requires adding `-fcommon` in two places:
+
+1. **Docker build time** — intercept gfortran during `SETUP73` /
+   `finish_Linux_gfortran` (which compiles `nonmem.a`) via a temporary
+   PATH-priority wrapper script:
+   ```sh
+   mkdir -p /tmp/gfortran_wrap
+   printf '#!/bin/sh\nexec /usr/bin/gfortran -fcommon "$@"\n' \
+     > /tmp/gfortran_wrap/gfortran
+   chmod +x /tmp/gfortran_wrap/gfortran
+   export PATH="/tmp/gfortran_wrap:$PATH"
+   # ... run SETUP73 here ...
+   rm -rf /tmp/gfortran_wrap
+   ```
+
+2. **NONMEM runtime** — patch the `$o` flags variable inside the `nmfe73`
+   script so that model-specific Fortran files are also compiled with
+   `-fcommon`:
+   ```sh
+   sed -i \
+     "s|o=' -w -O3 -ffast-math '|o=' -fcommon -w -O3 -ffast-math '|" \
+     /opt/NONMEM/nm730/util/nmfe73
+   ```
+
+Both steps are necessary: the first ensures `nonmem.a` is internally
+consistent; the second ensures model files compiled at runtime can resolve
+COMMON-block symbols from `nonmem.a`.
+
+**NONMEM 7.2.0** does not need this fix — empirical testing confirms it runs
+successfully with all gfortran versions including 10–14. The 7.2.0 Fortran
+source does not rely on COMMON-block merging in the same way.
+
 #### ARM64 (linux/arm64) — Raspberry Pi 4/5 and AWS Graviton2/3/4
 
 The same `linux/arm64` Docker image runs on both Raspberry Pi 4/5 and
