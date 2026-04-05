@@ -28,11 +28,12 @@ Example: `7.4.1-ubuntu22.04-gfortran9-amd64`
 
 Legend: `yes` = image builds and NONMEM runs successfully · `no` = Docker image build fails ·
 `link⁴` = Docker image builds but NONMEM fails to link model executable at runtime ·
+`crash⁵` = image builds and most models run, but specific ADVAN13 ODE models crash at runtime ·
 `—` = gfortran version not available in that Ubuntu's standard repos
 
 #### x86-64 (linux/amd64)
 
-##### NONMEM 7.2.0 — all gfortran versions succeed
+##### NONMEM 7.2.0 — gfortran ≥ 10 builds but fails at runtime
 
 | gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 |:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
@@ -46,11 +47,11 @@ Legend: `yes` = image builds and NONMEM runs successfully · `no` = Docker image
 | 7        | —     | —     | yes   | yes   | —     | —     |
 | 8        | —     | —     | yes   | yes   | —     | —     |
 | 9        | —     | —     | —     | yes   | yes   | yes   |
-| 10       | —     | —     | —     | yes   | yes   | yes   |
-| 11       | —     | —     | —     | —     | yes   | yes   |
-| 12       | —     | —     | —     | —     | yes   | yes   |
-| 13       | —     | —     | —     | —     | —     | yes   |
-| 14       | —     | —     | —     | —     | —     | yes   |
+| 10       | —     | —     | —     | link⁴ | link⁴ | link⁴ |
+| 11       | —     | —     | —     | —     | link⁴ | link⁴ |
+| 12       | —     | —     | —     | —     | link⁴ | link⁴ |
+| 13       | —     | —     | —     | —     | —     | link⁴ |
+| 14       | —     | —     | —     | —     | —     | link⁴ |
 
 ##### NONMEM 7.3.0 — gfortran ≥ 10 builds but fails at runtime
 
@@ -92,7 +93,7 @@ Legend: `yes` = image builds and NONMEM runs successfully · `no` = Docker image
 | 13       | —     | —     | —     | —     | —     | no¹   |
 | 14       | —     | —     | —     | —     | —     | no¹   |
 
-##### NONMEM 7.5.1 and 7.6.0 — gfortran 4.4 fails
+##### NONMEM 7.5.1 and 7.6.0 — gfortran 4.4 fails; gfortran 13/14 crashes on some ADVAN13 models
 
 | gfortran | 14.04 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 |:--------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
@@ -109,8 +110,8 @@ Legend: `yes` = image builds and NONMEM runs successfully · `no` = Docker image
 | 10       | —     | —     | —     | yes   | yes   | yes   |
 | 11       | —     | —     | —     | —     | yes   | yes   |
 | 12       | —     | —     | —     | —     | yes   | yes   |
-| 13       | —     | —     | —     | —     | —     | yes   |
-| 14       | —     | —     | —     | —     | —     | yes   |
+| 13       | —     | —     | —     | —     | —     | crash⁵ |
+| 14       | —     | —     | —     | —     | —     | crash⁵ |
 
 #### Failure footnotes
 
@@ -177,9 +178,20 @@ Both steps are necessary: the first ensures `nonmem.a` is internally
 consistent; the second ensures model files compiled at runtime can resolve
 COMMON-block symbols from `nonmem.a`.
 
-**NONMEM 7.2.0** does not need this fix — empirical testing confirms it runs
-successfully with all gfortran versions including 10–14. The 7.2.0 Fortran
-source does not rely on COMMON-block merging in the same way.
+**NONMEM 7.2.0** has the same `-fcommon`/`-fno-common` issue as 7.3.0 and also
+requires this fix when paired with gfortran ≥ 10.  Empirical testing shows all
+54 test models fail to link for every affected 7.2.0 + gfortran ≥ 10 combination.
+Use gfortran ≤ 9 with NONMEM 7.2.0.
+
+⁵ **gfortran 13/14 + NONMEM 7.5.1 / 7.6.0 — ADVAN13 runtime crash**: Docker images
+build and most models run successfully, but a subset of ADVAN13 (user-defined ODE)
+models with 3-compartment structures crash with SIGSEGV during FOCEI estimation.
+The crash occurs reproducibly after 15–25 optimization iterations; NMTRAN and
+compilation succeed without error.  In a test suite of 54 models (36 ODE, 18
+analytically solved), 4 ADVAN13 models crashed on gfortran 13 or 14 while running
+successfully on gfortran ≤ 12.  A bug report with reproducible control streams and
+crash logs has been filed with Icon.  Use gfortran ≤ 12 with NONMEM 7.5.1 / 7.6.0
+until a fix is available.
 
 #### ARM64 (linux/arm64) — Raspberry Pi 4/5 and AWS Graviton2/3/4
 
